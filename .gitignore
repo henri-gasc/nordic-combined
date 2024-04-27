@@ -9,3 +9,7 @@ extracted
 # Archive
 *.zip
 *.tar.*
+
+# Image/Video
+*.png
+*.mp4

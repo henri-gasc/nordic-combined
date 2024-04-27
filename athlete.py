@@ -5,13 +5,14 @@
 class Athlete:
     """Store information about a athlete"""
 
-    def __init__(self, name: str, avg_speed: float, data: dict[str, str]) -> None:
+    def __init__(self, name: str, rank: int, data: dict[str, str]) -> None:
         self.name = name
-        self.avg_speed = avg_speed
-        self.rank = 0
-        self.time = 0.0
-        self.distance = 0.0
         self.data = data
+        self.rank = rank
+        self.starting_place = rank
+        self.time = .0
+        self.distance = .0
+        self.avg_speed = .0
 
     def __str__(self) -> str:
         return f"{self.name}: at {self.distance}m/{self.time}s with {self.avg_speed}m/s"

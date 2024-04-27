@@ -3,6 +3,10 @@
 
 import os
 
+import matplotlib.pyplot as plt
+from matplotlib import animation
+from matplotlib.animation import FuncAnimation
+
 import simulation
 
 
@@ -33,12 +37,19 @@ if i == -1:
 
 sim = simulation.SimpleSim(1)
 sim.load_csv(os.path.join("extracted", l[i]))
+sim.render = True
 sim.start()
 while not sim.ended:
     sim.update()
 
-print("The rank are as follow:")
-for i in range(len(sim.done)):
-    print(
-        f"- {i+1:2}. {sim.done[i].name} in {simulation.time_convert_to_str(sim.done[i].time)}"
-    )
+# plt.figure(dpi=500)
+# # plt.grid(True)
+# for name in time:
+#     plt.plot(time[name], dist[name])
+# plt.savefig("end.png")
+
+# print("The rank are as follow:")
+# for i in range(len(sim.done)):
+#     print(
+#         f"- {i+1:2}. {sim.done[i].name} in {simulation.time_convert_to_str(sim.done[i].time)}"
+#     )

@@ -1,5 +1,6 @@
 pandas
 pypdf
+matplotlib
 
 # Mypy
 mypy
