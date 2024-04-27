@@ -52,15 +52,25 @@ def write_to_csv(file_name: str, records: list[dict[str, str]]) -> None:
         for line in records:
             f.write(",".join(line.values()) + "\n")
 
-def extract(path_file_in: str, path_file_out: str) -> None:
+def get_distance(text: str) -> float:
+    for line in text.split("\n"):
+        # Got distance ?
+        if line[-2:] == "km":
+            return float(line.split("/")[1][:-2])
+
+def extract(path_file_in: str, dir_file_out: str) -> None:
+    base = os.path.basename(path_file_in)
+    base = ".".join(base.split(".")[:-1]) # Remove last .* (extension)
     pdf = pypdf.PdfReader(path_file_in)
     records = []
+    distance = get_distance(pdf.get_page(0).extract_text())
     for i in range(pdf.get_num_pages()):
         page = pdf.get_page(i)
         text = page.extract_text()
         records += convert_to_list(text)
     os.makedirs(csv_dir, exist_ok=True)
-    write_to_csv(path_file_out, records)
+    path_out = os.path.join(dir_file_out, f"{base}_{distance}.csv")
+    write_to_csv(path_out, records)
 
 pdfs_dir = "pdf_results"
 csv_dir = "extracted"
@@ -74,4 +84,4 @@ if __name__ == "__main__":
         if ".pdf" != pdf_path[-4:]:
             continue
         print(f"Doing {pdf_path}")
-        extract(os.path.join(pdfs_dir, pdf_path), os.path.join(csv_dir, f"{pdf_path[:-4]}.csv"))
+        extract(os.path.join(pdfs_dir, pdf_path), csv_dir)
