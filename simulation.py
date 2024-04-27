@@ -1,10 +1,14 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import pandas
+
 from athlete import Athlete
 
-def time_convert_to_str(time: int|float) -> str:
+
+def time_convert_to_str(time: int | float) -> str:
+    """Convert time (in seconds) to a string of format hh:mm:ss
+    The hh: is ommitted if equal to 0"""
     out = ""
     h = time // 3600
     if h != 0:
@@ -13,12 +17,18 @@ def time_convert_to_str(time: int|float) -> str:
     # We want to keep the decisecond
     return f"{out}{int(time // 60):02}:{int(time - (time//60)*60):02}"
 
+
 def time_convert_to_float(time: str) -> float:
+    """Split time at : and return the time in seconds"""
     m, s = time.split(":")
     return float(m) * 60 + float(s)
 
+
 class Simulation:
+    """Base class for simulation"""
+
     def load_csv(self, path_file: str) -> None:
+        """Load the csv, create the list of athletes waiting"""
         self.file = path_file
         self.data = pandas.read_csv(path_file)
         self.waiting: dict[float, list[Athlete]] = {}
@@ -38,29 +48,37 @@ class Simulation:
                 self.waiting[t] = [A]
 
     def guess_avg_speed(self, a: Athlete) -> float:
-        raise NotImplementedError("Cannot use this class to simulate, please use a derived class")
+        """Return the average speed for an athlete"""
+        raise NotImplementedError(
+            "Cannot use this class to simulate, please use a derived class"
+        )
+
 
 class SimpleSim(Simulation):
+    """A simple simulation without collision, air resistance, or anything really"""
+
     def __init__(self, dt: float) -> None:
         self.dt = dt
         self.ended = False
 
     def guess_avg_speed(self, a: Athlete) -> float:
+        """Return the average speed"""
         return self.distance / time_convert_to_float(a.get("cross_time"))
 
     def start(self) -> None:
+        """Initialize the simulation"""
         for i in self.waiting:
             for j in range(len(self.waiting[i])):
                 self.waiting[i][j].avg_speed = self.guess_avg_speed(self.waiting[i][j])
-        self.t = .0
+        self.t = 0.0
         for a in self.waiting[self.t]:
             self.skiing.append(a)
         self.waiting.pop(self.t)
 
-        # for t in self.waiting:
-        #     print(f"{t}: {self.waiting[t]}")
-
     def update(self) -> None:
+        """Update the state of the simulation.
+        If some athlete can now start the cross crountry, make them start.
+        Remove the athlete from the race if they finished."""
         self.t += self.dt
         if self.t in self.waiting:
             for a in self.waiting[self.t]:
@@ -75,5 +93,6 @@ class SimpleSim(Simulation):
                 self.skiing.pop(i)
             else:
                 i += 1
+
         if len(self.skiing) == len(self.waiting) == 0:
             self.ended = True

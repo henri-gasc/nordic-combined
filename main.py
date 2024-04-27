@@ -1,8 +1,10 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import os
+
 import simulation
+
 
 def select(l: list[str]) -> int:
     if len(l) == 1:
@@ -20,6 +22,7 @@ def select(l: list[str]) -> int:
             print(f"{inp} is not a valid number")
     return selected
 
+
 l = os.listdir("extracted")
 if len(l) == 0:
     print("There is no data extracted. Please use extract.py")
@@ -36,4 +39,6 @@ while not sim.ended:
 
 print("The rank are as follow:")
 for i in range(len(sim.done)):
-    print(f"- {i+1:2}. {sim.done[i].name} in {simulation.time_convert_to_str(sim.done[i].time)}")
+    print(
+        f"- {i+1:2}. {sim.done[i].name} in {simulation.time_convert_to_str(sim.done[i].time)}"
+    )
