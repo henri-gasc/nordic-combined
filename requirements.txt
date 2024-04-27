@@ -1,2 +1,6 @@
 pandas
 pypdf
+
+# Mypy
+mypy
+pandas-stubs
