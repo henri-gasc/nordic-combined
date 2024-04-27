@@ -52,22 +52,26 @@ def write_to_csv(file_name: str, records: list[dict[str, str]]) -> None:
         for line in records:
             f.write(",".join(line.values()) + "\n")
 
-pdfs_dir = "pdf_results"
-csv_dir = "extracted"
-
-l = os.listdir(pdfs_dir)
-if len(l) == 0:
-    printf("No pdf found. Put them in the results folder so they can be extracted")
-
-for pdf_path in l:
-    if ".pdf" != pdf_path[-4:]:
-        continue
-    print(f"Doing {pdf_path}")
-    pdf = pypdf.PdfReader(os.path.join(pdfs_dir, pdf_path))
+def extract(path_file_in: str, path_file_out: str) -> None:
+    pdf = pypdf.PdfReader(path_file_in)
     records = []
     for i in range(pdf.get_num_pages()):
         page = pdf.get_page(i)
         text = page.extract_text()
         records += convert_to_list(text)
     os.makedirs(csv_dir, exist_ok=True)
-    write_to_csv(os.path.join(csv_dir, f"{pdf_path[:-4]}.csv"), records)
+    write_to_csv(path_file_out, records)
+
+pdfs_dir = "pdf_results"
+csv_dir = "extracted"
+
+if __name__ == "__main__":
+    l = os.listdir(pdfs_dir)
+    if len(l) == 0:
+        printf("No pdf found. Put them in the results folder so they can be extracted")
+
+    for pdf_path in l:
+        if ".pdf" != pdf_path[-4:]:
+            continue
+        print(f"Doing {pdf_path}")
+        extract(os.path.join(pdfs_dir, pdf_path), os.path.join(csv_dir, f"{pdf_path[:-4]}.csv"))

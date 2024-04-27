@@ -1,2 +1,11 @@
+# Python
+.env
+__pycache__
+
+# Data
 pdf_results
 extracted
+
+# Archive
+*.zip
+*.tar.*
