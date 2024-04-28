@@ -30,9 +30,10 @@ class Athlete:
         self.distance += s * dt
 
     def overtake(self, other: object) -> None:
-        """Not used for now, exchange the rank of two athlete"""
-        if type(other) != Athlete:
+        """Exchange the rank of two athlete if other is ahead of self"""
+        if type(other) == Athlete:
+            tmp = self.rank
+            self.rank = other.rank
+            other.rank = tmp
+        else:
             raise TypeError(f"'{other}' is not an instance of Athlete")
-        tmp = self.rank
-        self.rank = other.rank
-        other.rank = tmp

@@ -42,10 +42,10 @@ sim.start()
 while not sim.ended:
     sim.update()
 
-sim.write()
-
 # print("The rank are as follow:")
 # for i in range(len(sim.done)):
 #     print(
-#         f"- {i+1:2}. {sim.done[i].name} in {simulation.time_convert_to_str(sim.done[i].time)}"
+#         f"- {sim.done[i].rank:2}. {sim.done[i].name} in {simulation.time_convert_to_str(sim.done[i].time)}"
 #     )
+
+sim.write()

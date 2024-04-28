@@ -1,6 +1,7 @@
 pandas
 pypdf
 matplotlib
+matplotlib-label-lines
 
 # Mypy
 mypy

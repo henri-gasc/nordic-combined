@@ -4,6 +4,7 @@
 import os
 
 import matplotlib.pyplot as plt
+from labellines import labelLines
 import multiprocessing
 import shutil
 import pandas
@@ -69,7 +70,7 @@ class Simulation:
 
         self.time: dict[str, list[float]] = {name: [] for name in self.data["name"]}
         self.dist: dict[str, list[float]] = {name: [] for name in self.data["name"]}
-        self.frames: dict[int, dict[int, tuple[float, float]]] = {}
+        self.frames: dict[int, dict[int, tuple[int, float, float]]] = {}
 
     def guess_avg_speed(self, a: Athlete) -> float:
         """Return the average speed for an athlete"""
@@ -82,8 +83,17 @@ class Simulation:
         ax.set_xlabel(f"Distance (in m)")
         ax.set_ylabel("Starting position")
         ax.set_ylim([0, self.num_athlete+2])
+        xvals = []
         for p in self.frames[frame]:
-            ax.plot(self.frames[frame][p], [p, p], color=self.colors[(p-1)%len(self.colors)])
+            c = self.colors[(p-1)%len(self.colors)]
+            data = self.frames[frame][p]
+            ax.plot(data[1:], [p, p], color=c, label=f"{data[0]}")
+            d = abs(data[2] - data[1])
+            x = data[1] + d/2 * (1 + 0.2*((p%3)-1))
+            if (x < data[1]) or (x > data[2]):
+                print(data[1], data[2], p)
+            xvals.append(x)
+        labelLines(ax.get_lines(), xvals=xvals)
         fig.savefig(os.path.join("imgs", f"{frame:05}.png"))
         plt.close(fig)
         print(f"{len(os.listdir('imgs'))/len(self.frames)*100:4.4}% is done  ", end="\r")
@@ -137,6 +147,11 @@ class SimpleSim(Simulation):
                 self.skiing.pop(i)
             else:
                 i += 1
+        
+        for i in range(len(self.skiing)):
+            for j in range(len(self.skiing)):
+                if (self.skiing[i].distance > self.skiing[j].distance) and (self.skiing[i].rank > self.skiing[j].rank):
+                    self.skiing[i].overtake(self.skiing[j])
 
         if len(self.skiing) == len(self.waiting) == 0:
             self.ended = True
@@ -165,9 +180,7 @@ class SimpleSim(Simulation):
     def add_data(self, m: float) -> None:
         # There can not be* more than one athlete with a starting place, and they cannot be in self.skiing an self.done at the same time
         self.frames[self.frame] = {}
-        for a in self.skiing:
-            self.frames[self.frame][a.starting_place] = (m, a.distance)
-        for a in self.done:
-            self.frames[self.frame][a.starting_place] = (m, a.distance)
+        for a in self.skiing.copy() + self.done.copy():
+            self.frames[self.frame][a.starting_place] = (a.rank, m, a.distance)
         # self.time[a.name][self.frame] = [0, a.time]
         # self.dist[a.name][self.frame] = [a.starting_place, a.starting_place]
