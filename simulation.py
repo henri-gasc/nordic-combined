@@ -4,6 +4,8 @@
 import os
 
 import matplotlib.pyplot as plt
+import multiprocessing
+import shutil
 import pandas
 
 from athlete import Athlete
@@ -40,7 +42,7 @@ class Simulation:
     waiting: dict[float, list[Athlete]] = {}
     skiing: list[Athlete] = []
     done: list[Athlete] = []
-    color = plt.cm.get_cmap("hsv", 0)
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
     def load_csv(self, path_file: str) -> None:
         """Load the csv, create the list of athletes waiting"""
@@ -51,18 +53,23 @@ class Simulation:
             raise AttributeError("Cannot find the distance in the file name")
         self.distance = int(self.file.split("_")[-1].split(".")[0]) * 1000
 
+        ranks = []
         for i in range(len(self.data["name"])):
             self.num_athlete += 1
-            A = Athlete(self.data["name"][i], self.num_athlete, dict(self.data.iloc[i]))
+            r = self.data["jump_rank"][i]
+            while r in ranks:
+                r += 1
+            ranks.append(r)
+            A = Athlete(self.data["name"][i], r, dict(self.data.iloc[i]))
             t = time_convert_to_float(A.get("jump_time_diff"))
             if t in self.waiting:
                 self.waiting[t].append(A)
             else:
                 self.waiting[t] = [A]
 
-        self.color = plt.cm.get_cmap("hsv", self.num_athlete)
         self.time: dict[str, list[float]] = {name: [] for name in self.data["name"]}
         self.dist: dict[str, list[float]] = {name: [] for name in self.data["name"]}
+        self.frames: dict[int, dict[int, tuple[float, float]]] = {}
 
     def guess_avg_speed(self, a: Athlete) -> float:
         """Return the average speed for an athlete"""
@@ -70,13 +77,29 @@ class Simulation:
             "Cannot use this class to simulate, please use a derived class"
         )
 
+    def save_frame(self, frame: int) -> None:
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 5))
+        ax.set_xlabel(f"Distance (in m)")
+        ax.set_ylabel("Starting position")
+        ax.set_ylim([0, self.num_athlete+2])
+        for p in self.frames[frame]:
+            ax.plot(self.frames[frame][p], [p, p], color=self.colors[(p-1)%len(self.colors)])
+        fig.savefig(os.path.join("imgs", f"{frame:05}.png"))
+        plt.close(fig)
+        print(f"{len(os.listdir('imgs'))/len(self.frames)*100:4.4}% is done  ", end="\r")
+
+    def write(self) -> None:
+        pool = multiprocessing.Pool()
+        shutil.rmtree("imgs")
+        os.makedirs("imgs", exist_ok=True)
+        pool.map(self.save_frame, range(1, len(self.frames)+1))
+
 
 class SimpleSim(Simulation):
     """A simple simulation without collision, air resistance, or anything really"""
 
     def __init__(self, dt: float) -> None:
         self.dt = dt
-        self.fig, self.axes = plt.subplots(nrows=1, ncols=1, figsize=(15, 5))
 
     def guess_avg_speed(self, a: Athlete) -> float:
         """Return the average speed"""
@@ -93,9 +116,6 @@ class SimpleSim(Simulation):
         for a in self.waiting[self.t]:
             self.skiing.append(a)
         self.waiting.pop(self.t)
-
-        # plt.ylim([0, self.num_athlete])
-        self.axes.set_ylim([0, self.num_athlete])
 
     def update(self) -> None:
         """Update the state of the simulation.
@@ -125,9 +145,29 @@ class SimpleSim(Simulation):
         #     self.time[a.name].append(self.t / 60)
         #     self.dist[a.name].append(a.distance / 1000)
 
-        if self.render:
-            # for name in self.time:
-            #     self.axes.plot(self.time[name], self.dist[name])
-            for a in self.skiing:
-                self.axes.plot([0, a.time], [a.starting_place, a.starting_place], color=self.color(a.starting_place))
-            self.fig.savefig(os.path.join("imgs", f"{self.frame:05}.png"))
+        all_athlete = []
+        for l in self.waiting:
+            all_athlete += self.waiting[l]
+        all_athlete += self.skiing.copy() + self.done.copy()
+        m = min([a.distance for a in all_athlete])
+        if m > 500:
+            m -= 500
+        else:
+            m = 0
+
+        if self.ended:
+            for i in range(250):
+                self.add_data(m)
+                self.frame += 1
+        else:
+            self.add_data(m)
+
+    def add_data(self, m: float) -> None:
+        # There can not be* more than one athlete with a starting place, and they cannot be in self.skiing an self.done at the same time
+        self.frames[self.frame] = {}
+        for a in self.skiing:
+            self.frames[self.frame][a.starting_place] = (m, a.distance)
+        for a in self.done:
+            self.frames[self.frame][a.starting_place] = (m, a.distance)
+        # self.time[a.name][self.frame] = [0, a.time]
+        # self.dist[a.name][self.frame] = [a.starting_place, a.starting_place]

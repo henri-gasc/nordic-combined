@@ -42,11 +42,7 @@ sim.start()
 while not sim.ended:
     sim.update()
 
-# plt.figure(dpi=500)
-# # plt.grid(True)
-# for name in time:
-#     plt.plot(time[name], dist[name])
-# plt.savefig("end.png")
+sim.write()
 
 # print("The rank are as follow:")
 # for i in range(len(sim.done)):
