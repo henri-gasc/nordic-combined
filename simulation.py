@@ -78,6 +78,18 @@ class Simulation:
             "Cannot use this class to simulate, please use a derived class"
         )
 
+    def start(self) -> None:
+        """Initialize the simulation"""
+        for i in self.waiting:
+            for j in range(len(self.waiting[i])):
+                self.waiting[i][j].avg_speed = self.guess_avg_speed(self.waiting[i][j])
+        self.t = .0
+        self.frame = 0
+        self.ended = False
+        for a in self.waiting[self.t]:
+            self.skiing.append(a)
+        self.waiting.pop(self.t)
+
     def save_frame(self, frame: int) -> None:
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 5))
         ax.set_xlabel(f"Distance (in m)")
@@ -105,61 +117,7 @@ class Simulation:
         pool.map(self.save_frame, range(1, len(self.frames)+1))
 
 
-class SimpleSim(Simulation):
-    """A simple simulation without collision, air resistance, or anything really"""
-
-    def __init__(self, dt: float) -> None:
-        self.dt = dt
-
-    def guess_avg_speed(self, a: Athlete) -> float:
-        """Return the average speed"""
-        return self.distance / time_convert_to_float(a.get("cross_time"))
-
-    def start(self) -> None:
-        """Initialize the simulation"""
-        for i in self.waiting:
-            for j in range(len(self.waiting[i])):
-                self.waiting[i][j].avg_speed = self.guess_avg_speed(self.waiting[i][j])
-        self.t = .0
-        self.frame = 0
-        self.ended = False
-        for a in self.waiting[self.t]:
-            self.skiing.append(a)
-        self.waiting.pop(self.t)
-
-    def update(self) -> None:
-        """Update the state of the simulation.
-        If some athlete can now start the cross crountry, make them start.
-        Remove the athlete from the race if they finished."""
-        print(time_convert_to_str(self.t), end="\r")
-        self.frame += 1
-        self.t += self.dt
-        if self.t in self.waiting:
-            for a in self.waiting[self.t]:
-                self.skiing.append(a)
-            self.waiting.pop(self.t)
-
-        i = 0
-        while i < len(self.skiing):
-            self.skiing[i].update(self.dt)
-            if self.skiing[i].distance >= self.distance:
-                self.done.append(self.skiing[i])
-                self.skiing.pop(i)
-            else:
-                i += 1
-        
-        for i in range(len(self.skiing)):
-            for j in range(len(self.skiing)):
-                if (self.skiing[i].distance > self.skiing[j].distance) and (self.skiing[i].rank > self.skiing[j].rank):
-                    self.skiing[i].overtake(self.skiing[j])
-
-        if len(self.skiing) == len(self.waiting) == 0:
-            self.ended = True
-
-        # for a in self.skiing:
-        #     self.time[a.name].append(self.t / 60)
-        #     self.dist[a.name].append(a.distance / 1000)
-
+    def update_data(self):
         all_athlete = []
         for l in self.waiting:
             all_athlete += self.waiting[l]
@@ -184,3 +142,105 @@ class SimpleSim(Simulation):
             self.frames[self.frame][a.starting_place] = (a.rank, m, a.distance)
         # self.time[a.name][self.frame] = [0, a.time]
         # self.dist[a.name][self.frame] = [a.starting_place, a.starting_place]
+
+
+class SimpleSim(Simulation):
+    """A simple simulation without collision, air resistance, or anything really"""
+
+    def __init__(self, dt: float) -> None:
+        self.dt = dt
+
+    def guess_avg_speed(self, a: Athlete) -> float:
+        """Return the average speed"""
+        return self.distance / time_convert_to_float(a.get("cross_time"))
+
+    def update(self) -> None:
+        """Update the state of the simulation.
+        If some athlete can now start the cross crountry, make them start.
+        Remove the athlete from the race if they finished."""
+        print(time_convert_to_str(self.t), end="\r")
+        self.frame += 1
+        self.t += self.dt
+        if self.t in self.waiting:
+            for a in self.waiting[self.t]:
+                self.skiing.append(a)
+            self.waiting.pop(self.t)
+
+        i = 0
+        while i < len(self.skiing):
+            self.skiing[i].update(self.dt)
+            if self.skiing[i].distance >= self.distance:
+                self.done.append(self.skiing[i])
+                self.skiing.pop(i)
+            else:
+                i += 1
+
+        for i in range(len(self.skiing)):
+            for j in range(len(self.skiing)):
+                if (self.skiing[i].distance > self.skiing[j].distance) and (self.skiing[i].rank > self.skiing[j].rank):
+                    self.skiing[i].overtake(self.skiing[j])
+
+        if len(self.skiing) == len(self.waiting) == 0:
+            self.ended = True
+        
+        self.update_data()
+
+
+class SlitstreamSim(Simulation):
+    """A simple simulation without collision, air resistance, or anything really"""
+
+    def __init__(self, dt: float) -> None:
+        self.dt = dt
+
+    def guess_avg_speed(self, a: Athlete) -> float:
+        """Return the average speed"""
+        return self.distance / time_convert_to_float(a.get("cross_time"))
+
+    def update(self) -> None:
+        """Update the state of the simulation.
+        If some athlete can now start the cross crountry, make them start.
+        Remove the athlete from the race if they finished."""
+        print(time_convert_to_str(self.t), end="\r")
+        self.frame += 1
+        self.t += self.dt
+        if self.t in self.waiting:
+            for a in self.waiting[self.t]:
+                self.skiing.append(a)
+            self.waiting.pop(self.t)
+
+        i = 0
+        while i < len(self.skiing):
+            a = self.skiing[i]
+
+            can_activate_boost = False
+            for j in range(0, len(self.skiing)):
+                if (i == j):
+                    continue
+                other = self.skiing[j]
+                d = other.distance - a.distance
+                if d < 2.5 and d > 0.5:
+                    can_activate_boost = True
+                    break
+
+            if not self.skiing[i].boost.is_active(self.t):
+                if can_activate_boost:
+                    self.skiing[i].boost.change(self.t)
+                else:
+                    self.skiing[i].boost.reset()
+
+            self.skiing[i].update(self.dt)
+            if self.skiing[i].distance >= self.distance:
+                self.done.append(self.skiing[i])
+                self.skiing.pop(i)
+            else:
+                i += 1
+
+        for i in range(len(self.skiing)):
+            for j in range(len(self.skiing)):
+                if (self.skiing[i].distance > self.skiing[j].distance) and (self.skiing[i].rank > self.skiing[j].rank):
+                    self.skiing[i].overtake(self.skiing[j])
+
+        if len(self.skiing) == len(self.waiting) == 0:
+            self.ended = True
+        
+        self.update_data()

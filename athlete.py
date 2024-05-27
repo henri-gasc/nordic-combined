@@ -1,6 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+class Boost:
+    """ The boost class. Stores information about each athlete's boost """
+    def __init__(self) -> None:
+        self.time_activation = 2
+        self.time_boost = 5
+        self.activate_start = -1
+        self.start_boost = -1
+
+    def change(self, t: float) -> None:
+        if self.activate_start < 0:
+            self.activate_start = t
+        elif (t - self.activate_start) > self.time_activation:
+            self.start_boost = t
+
+    def is_active(self, t: float) -> bool:
+        """ Return if an athelete has a boost or not """
+        if self.start_boost < 0:
+            return False
+        return (t - self.start_boost) < self.time_boost
+
+    def reset(self) -> None:
+        """ Reset a boost """
+        self.activate_start = -1
+        self.start_boost = -1
 
 class Athlete:
     """Store information about a athlete"""
@@ -13,6 +37,7 @@ class Athlete:
         self.time = .0
         self.distance = .0
         self.avg_speed = .0
+        self.boost = Boost()
 
     def __str__(self) -> str:
         return f"{self.name}: at {self.distance}m/{self.time}s with {self.avg_speed}m/s"
@@ -27,6 +52,8 @@ class Athlete:
         s = speed
         if s is None:
             s = self.avg_speed
+        if self.boost.is_active(self.time):
+            s *= 1.5
         self.distance += s * dt
 
     def overtake(self, other: object) -> None:

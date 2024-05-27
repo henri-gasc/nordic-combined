@@ -35,17 +35,21 @@ i = select(l)
 if i == -1:
     exit(0)
 
-sim = simulation.SimpleSim(1)
+sim = simulation.SlitstreamSim(0.5)
+# sim = simulation.SimpleSim(1)
 sim.load_csv(os.path.join("extracted", l[i]))
 sim.render = True
 sim.start()
 while not sim.ended:
     sim.update()
 
-# print("The rank are as follow:")
-# for i in range(len(sim.done)):
-#     print(
-#         f"- {sim.done[i].rank:2}. {sim.done[i].name} in {simulation.time_convert_to_str(sim.done[i].time)}"
-#     )
+print("The rank are as follow:")
+for i in range(len(sim.done)):
+    print(
+        f"- {sim.done[i].rank:2}. {sim.done[i].name} in {simulation.time_convert_to_str(sim.done[i].time)}"
+    )
 
-sim.write()
+# sim.write()
+
+# ffmpeg command:
+# ffmpeg -i imgs/%5d.png video.mp4
