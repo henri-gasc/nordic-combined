@@ -8,6 +8,7 @@ from labellines import labelLines
 import multiprocessing
 import shutil
 import pandas
+import random
 
 from athlete import Athlete
 
@@ -202,6 +203,8 @@ class SimpleSim(Simulation):
 class SlitstreamSim(Simulation):
     """A simple simulation without collision, air resistance, or anything really"""
 
+    prob_activation_boost = 0.5
+
     def __init__(self, dt: float) -> None:
         self.dt = dt
 
@@ -210,7 +213,7 @@ class SlitstreamSim(Simulation):
         t = time_convert_to_float(a.get("cross_time"))
         # s = self.distance / t
         # print(f"{a.name:30}: {(s * 3.6):.05} ({self.distance}m in {t}s)")
-        return self.distance / t
+        return self.distance / t + (random.random() - 0.5) # Can give boost or slow down
 
     def update(self) -> None:
         """Update the state of the simulation.
@@ -240,7 +243,8 @@ class SlitstreamSim(Simulation):
 
             if not self.skiing[i].boost.is_active(self.t):
                 if can_activate_boost:
-                    self.skiing[i].boost.change(self.t)
+                    if random.random() > (1 - self.prob_activation_boost):
+                        self.skiing[i].boost.change(self.t)
                 else:
                     self.skiing[i].boost.reset()
 
