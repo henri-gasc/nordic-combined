@@ -54,13 +54,11 @@ class Simulation:
             raise AttributeError("Cannot find the distance in the file name")
         self.distance = int(self.file.split("_")[-1].split(".")[0]) * 1000
 
-        ranks = []
+        ranks = 1
         for i in range(len(self.data["name"])):
             self.num_athlete += 1
-            r = self.data["jump_rank"][i]
-            while r in ranks:
-                r += 1
-            ranks.append(r)
+            r = ranks
+            ranks += 1
             A = Athlete(self.data["name"][i], r, dict(self.data.iloc[i]))
             t = time_convert_to_float(A.get("jump_time_diff"))
             if t in self.waiting:
@@ -143,6 +141,21 @@ class Simulation:
         # self.time[a.name][self.frame] = [0, a.time]
         # self.dist[a.name][self.frame] = [a.starting_place, a.starting_place]
 
+    def compare_positions(self) -> list:
+        """ Plot the starting and ending position and the name for each athlete """
+        data = []
+        x_start = 0
+        x_end = 5
+        x_mid = 0.5 * (x_end - x_start)
+        plt.axis("off")
+        plt.xlim(x_start, x_end + x_mid)
+        for a in self.done:
+            y_start = a.starting_place
+            y_end = a.rank
+            plt.plot([x_start, x_end], [y_start, y_end])
+            plt.text(x_end + x_mid / 50, y_end - 0.25, f"{a.name}: {a.starting_place:02} -> {a.rank:02}")
+        plt.show()
+        return data
 
 class SimpleSim(Simulation):
     """A simple simulation without collision, air resistance, or anything really"""
@@ -194,7 +207,10 @@ class SlitstreamSim(Simulation):
 
     def guess_avg_speed(self, a: Athlete) -> float:
         """Return the average speed"""
-        return self.distance / time_convert_to_float(a.get("cross_time"))
+        t = time_convert_to_float(a.get("cross_time"))
+        # s = self.distance / t
+        # print(f"{a.name:30}: {(s * 3.6):.05} ({self.distance}m in {t}s)")
+        return self.distance / t
 
     def update(self) -> None:
         """Update the state of the simulation.

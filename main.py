@@ -43,11 +43,13 @@ sim.start()
 while not sim.ended:
     sim.update()
 
-print("The rank are as follow:")
-for i in range(len(sim.done)):
-    print(
-        f"- {sim.done[i].rank:2}. {sim.done[i].name} in {simulation.time_convert_to_str(sim.done[i].time)}"
-    )
+sim.compare_positions()
+
+# print("The rank are as follow:")
+# for i in range(len(sim.done)):
+#     print(
+#         f"- {sim.done[i].rank:2}. {sim.done[i].name} in {simulation.time_convert_to_str(sim.done[i].time)}"
+#     )
 
 # sim.write()
 
