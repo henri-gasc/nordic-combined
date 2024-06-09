@@ -291,7 +291,6 @@ class SlipstreamSim(Simulation):
         """Update the state of the simulation.
         If some athlete can now start the cross crountry, make them start.
         Remove the athlete from the race if they finished."""
-        print(time_convert_to_str(self.t), end="\r")
         # Update state and add skiing athletes
         self.t += self.dt
         self.t = round(self.t, 3)
@@ -299,6 +298,15 @@ class SlipstreamSim(Simulation):
             for a in self.waiting[self.t]:
                 self.skiing.append(a)
             self.waiting.pop(self.t)
+
+        text = time_convert_to_str(self.t)
+        m: Athlete | None = None
+        for a in self.skiing:
+            if (a.rank != -1) and ((m is None) or (a.rank < m.rank)):
+                m = a
+        if m is not None:
+            text = f"{text}, {int(self.distance - m.distance):05}m to go"
+        print(text, end="\r")
 
         i = 0
         while i < len(self.skiing):
@@ -325,7 +333,8 @@ class SlipstreamSim(Simulation):
             # If slipstream, you get a boost
             if not (force_change or self.skiing[i].boost.is_active(self.t)):
                 if can_activate_boost:
-                    if random.random() < self.prob_activation_boost:
+                    # Activate the boost only if the athlete can (but prob that it fails)
+                    if a.can_boost() and (random.random() < self.prob_activation_boost):
                         self.skiing[i].boost.change(self.t)
                 else:
                     self.skiing[i].boost.reset()

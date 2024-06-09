@@ -52,7 +52,7 @@ else:
 sim = simulation.SlipstreamSim(0.05)
 # sim = simulation.SimpleSim(1)
 sim.load_csv(path)
-sim.render = True
+sim.render = False
 
 if is_season:
     num = int(os.path.basename(path).split(" ")[0])
