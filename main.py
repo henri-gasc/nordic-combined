@@ -24,6 +24,9 @@ def select(l: list[str]) -> int:
             selected = int(inp)
         except ValueError:
             print(f"{inp} is not a valid number")
+    if selected == -1:
+        print("No race selected")
+        exit(1)
     return selected
 
 
@@ -32,13 +35,31 @@ if len(l) == 0:
     print("There is no data extracted. Please use extract.py")
     exit(1)
 i = select(l)
-if i == -1:
-    exit(0)
 
-sim = simulation.SlitstreamSim(0.5)
+path_season = os.path.join("extracted", l[i])
+is_season = os.path.isdir(path_season) and (l[i][:6].lower() == "season")
+if is_season:
+    l = os.listdir(path_season)
+    if len(l) == 0:
+        print("There is no race data here")
+        exit(1)
+    print("Season detected. Which race do you want to simulate ?")
+    i = select(l)
+    path = os.path.join(path_season, l[i])
+else:
+    path = path_season
+
+sim = simulation.SlipstreamSim(0.5)
 # sim = simulation.SimpleSim(1)
-sim.load_csv(os.path.join("extracted", l[i]))
+sim.load_csv(path)
 sim.render = True
+
+if is_season:
+    num = int(path.split(" ")[0])
+    l = os.listdir(path_season)
+    for race in l:
+        sim.prepare_race(os.path.join(path_season, race))
+
 sim.start()
 while not sim.ended:
     sim.update()

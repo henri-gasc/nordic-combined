@@ -48,6 +48,8 @@ class Athlete:
         self.avg_speed = 0.0
         self.boost = Boost()
         self.random = random
+        self.total_time = 0.0
+        self.expected_rank = int(self.get("rank"))
 
     @override
     def __str__(self) -> str:

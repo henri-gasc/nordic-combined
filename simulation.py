@@ -54,14 +54,17 @@ class Simulation:
     render = False
     colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
+    def read_csv(self, path_file: str) -> tuple[pandas.DataFrame, distance]:
+        data = pandas.read_csv(path_file)
+        if path_file.find("_") == -1:
+            raise AttributeError("Cannot find the distance in the file name")
+        distance = int(path_file.split("_")[-1].split(".")[0]) * 1000
+        return data, distance
+
     def load_csv(self, path_file: str) -> None:
         """Load the csv, create the list of athletes waiting"""
         self.file = path_file
-        self.data = pandas.read_csv(path_file)
-
-        if self.file.find("_") == -1:
-            raise AttributeError("Cannot find the distance in the file name")
-        self.distance = int(self.file.split("_")[-1].split(".")[0]) * 1000
+        self.data, self.distance = self.read_csv(path_file)
 
         # For each record of athlete, create an Athlete object
         rank = 1
@@ -84,6 +87,12 @@ class Simulation:
 
     def guess_avg_speed(self, a: Athlete) -> float:
         """Return the average speed for an athlete"""
+        raise NotImplementedError(
+            "Cannot use this class to simulate, please use a derived class"
+        )
+
+    def prepare_race(self, path: str) -> None:
+        """Load the csv to compute the average speed"""
         raise NotImplementedError(
             "Cannot use this class to simulate, please use a derived class"
         )
@@ -168,20 +177,20 @@ class Simulation:
         # self.dist[a.name][self.frame] = [a.starting_place, a.starting_place]
 
     def compare_positions(self) -> None:
-        """Plot the starting and ending position and the name for each athlete"""
+        """Plot the expected and real ending position and the name for each athlete"""
         x_start = 0
         x_end = 5
         x_mid = 0.5 * (x_end - x_start)
         plt.axis("off")
         plt.xlim(x_start, x_end + x_mid)
         for a in self.done:
-            y_start = a.starting_place
+            y_start = a.expected_rank
             y_end = a.rank
             plt.plot([x_start, x_end], [y_start, y_end])
             plt.text(
                 x_end + x_mid / 50,
                 y_end - 0.25,
-                f"{a.name}: {a.starting_place:02} -> {a.rank:02}",
+                f"{a.name}: {a.expected_rank:02} -> {a.rank:02}",
             )
         plt.show()
 
@@ -234,10 +243,11 @@ class SimpleSim(Simulation):
         self.render_update_data()
 
 
-class SlitstreamSim(Simulation):
-    """A simple simulation without collision, air resistance, or anything really"""
+class SlipstreamSim(Simulation):
+    """A more advanced simulation, notably with a attempt to recreate the slipstream effect"""
 
     prob_activation_boost = 0.90
+    total_distance = 0
 
     def __init__(self, dt: float) -> None:
         self.dt = dt
@@ -245,10 +255,35 @@ class SlitstreamSim(Simulation):
 
     def guess_avg_speed(self, a: Athlete) -> float:
         """Return the average speed"""
-        t = time_convert_to_float(a.get("cross_time"))
+        # t = time_convert_to_float(a.get("cross_time"))
         # s = self.distance / t
         # print(f"{a.name:30}: {(s * 3.6):.05} ({self.distance}m in {t}s)")
-        return self.distance / t
+        return self.total_distance / a.total_time
+
+        """
+
+        for i in range(len(self.data["name"])):
+            A = Athlete(
+                self.data["name"][i], rank, dict(self.data.iloc[i]), self.use_random
+            )
+            t = time_convert_to_float(A.get("jump_time_diff"))
+            if t in self.waiting:
+                self.waiting[t].append(A)
+            else:
+                self.waiting[t] = [A]
+            rank += 1
+
+        """
+
+    def prepare_race(self, path: str) -> None:
+        """ Should only be used after self.load_csv """
+        data, distance = self.read_csv(path)
+        self.total_distance += distance
+        for t in self.waiting:
+            for a in self.waiting[t]:
+                for i in range(len(data.name)):
+                    if (data.name[i] == a.name):
+                        a.total_time += time_convert_to_float(data.cross_time[i])
 
     def update(self) -> None:
         """Update the state of the simulation.
