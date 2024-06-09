@@ -62,14 +62,12 @@ class Simulation:
         self.data, self.distance = self.read_csv(path_file)
 
         # For each record of athlete, create an Athlete object
-        rank = 1
         for i in range(len(self.data["name"])):
             self.num_athlete += 1
             A = Athlete(
-                self.data["name"][i], rank, dict(self.data.iloc[i]), self.use_random
+                self.data["name"][i], dict(self.data.iloc[i]), self.use_random
             )
             self.all_athletes.append(A)
-            rank += 1
 
         # Rendering records
         self.time: dict[str, list[float]] = {name: [] for name in self.data["name"]}
@@ -186,9 +184,21 @@ class Simulation:
             plt.text(
                 x_end + x_mid / 50,
                 y_end - 0.25,
-                f"{a.name}: {a.expected_rank:02} -> {a.rank:02}",
+                f"{a.name} {a.starting_place:02}: {a.expected_rank:02} -> {a.rank:02}",
             )
         plt.show()
+
+    def update_rank(self) -> None:
+        # Exchange position for athletes if they were overtaken
+        places = {}
+        # print(len(self.skiing))
+        for i in range(len(self.skiing)):
+            places[self.skiing[i].name] = self.skiing[i].distance
+        # Sort the dict
+        places = {k: v for k, v in sorted(places.items(), key=lambda item: item[1], reverse=True)}
+        for i in range(len(self.skiing)):
+            self.skiing[i].rank = 1 + len(self.done) + list(places.keys()).index(self.skiing[i].name)
+
 
 
 class SimpleSim(Simulation):
@@ -224,13 +234,7 @@ class SimpleSim(Simulation):
             else:
                 i += 1
 
-        # Exchange position for athletes if they were overtaken
-        for i in range(len(self.skiing)):
-            for j in range(len(self.skiing)):
-                if (self.skiing[i].distance > self.skiing[j].distance) and (
-                    self.skiing[i].rank > self.skiing[j].rank
-                ):
-                    self.skiing[i].overtake(self.skiing[j])
+        self.update_rank()
 
         # If no more athletes are running or waiting, the simulation ended
         if len(self.skiing) == len(self.waiting) == 0:
@@ -273,7 +277,7 @@ class SlipstreamSim(Simulation):
         """Update the state of the simulation.
         If some athlete can now start the cross crountry, make them start.
         Remove the athlete from the race if they finished."""
-        print(time_convert_to_str(self.t), end="\r")
+        # print(time_convert_to_str(self.t), end="\r")
         # Update state and add skiing athletes
         self.frame += 1
         self.t += self.dt
@@ -316,19 +320,15 @@ class SlipstreamSim(Simulation):
                 self.skiing[i].update(self.dt, d / self.dt * 2)
             else:
                 self.skiing[i].update(self.dt)
+
+            # Remove the athlete if went over the distance (finished)
             if self.skiing[i].distance >= self.distance:
                 self.done.append(self.skiing[i])
                 self.skiing.pop(i)
             else:
                 i += 1
 
-        # Exchange position for athletes if they were overtaken
-        for i in range(len(self.skiing)):
-            for j in range(len(self.skiing)):
-                if (self.skiing[i].distance > self.skiing[j].distance) and (
-                    self.skiing[i].rank > self.skiing[j].rank
-                ):
-                    self.skiing[i].overtake(self.skiing[j])
+        self.update_rank()
 
         # If no more athletes are running or waiting, the simulation ended
         if len(self.skiing) == len(self.waiting) == 0:

@@ -43,12 +43,12 @@ class Athlete:
     """Store information about a athlete"""
 
     def __init__(
-        self, name: str, rank: int, data: dict[str, str], random: bool = False
+        self, name: str, data: dict[str, str], random: bool = False
     ) -> None:
         self.name = name
         self.data = data
-        self.rank = rank
-        self.starting_place = rank
+        self.rank = -1
+        self.starting_place = int(self.get("jump_rank"))
         self.time = 0.0
         self.distance = 0.0
         self.avg_speed = 0.0
@@ -63,7 +63,8 @@ class Athlete:
 
     @override
     def __str__(self) -> str:
-        return f"{self.name}: at {self.distance}m/{self.time}s with {self.avg_speed}m/s"
+        return f"{self.name} ({self.rank})"
+        # return f"{self.name}: at {self.distance}m / {self.time}s with {self.avg_speed}m/s"
 
     def get(self, name: str) -> str:
         """Query a specific column"""
