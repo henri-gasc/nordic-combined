@@ -4,13 +4,15 @@
 import random
 from typing import override
 
+
 class Boost:
-    """ The boost class. Stores information about each athlete's boost """
+    """The boost class. Stores information about each athlete's boost"""
+
     def __init__(self) -> None:
-        self.time_activation = 2
-        self.time_boost = 5
-        self.activate_start = -1
-        self.start_boost = -1
+        self.time_activation: float = 2.0
+        self.time_boost: float = 5.0
+        self.activate_start: float = -1.0
+        self.start_boost: float = -1.0
 
     def change(self, t: float) -> None:
         if self.activate_start < 0:
@@ -19,27 +21,30 @@ class Boost:
             self.start_boost = t
 
     def is_active(self, t: float) -> bool:
-        """ Return if an athelete has a boost or not """
+        """Return if an athelete has a boost or not"""
         if self.start_boost < 0:
             return False
         return (t - self.start_boost) < self.time_boost
 
     def reset(self) -> None:
-        """ Reset a boost """
+        """Reset a boost"""
         self.activate_start = -1
         self.start_boost = -1
+
 
 class Athlete:
     """Store information about a athlete"""
 
-    def __init__(self, name: str, rank: int, data: dict[str, str], random: bool = False) -> None:
+    def __init__(
+        self, name: str, rank: int, data: dict[str, str], random: bool = False
+    ) -> None:
         self.name = name
         self.data = data
         self.rank = rank
         self.starting_place = rank
-        self.time = .0
-        self.distance = .0
-        self.avg_speed = .0
+        self.time = 0.0
+        self.distance = 0.0
+        self.avg_speed = 0.0
         self.boost = Boost()
         self.random = random
 

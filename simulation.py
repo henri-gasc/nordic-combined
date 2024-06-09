@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import multiprocessing
 import os
+import random
+import shutil
 
 import matplotlib.pyplot as plt
-from labellines import labelLines
-import multiprocessing
-import shutil
 import pandas
-import random
+from labellines import labelLines
 
 from athlete import Athlete
 
@@ -34,18 +34,25 @@ def time_convert_to_float(time: str) -> float:
 class Simulation:
     """Base class for simulation"""
 
-    frame: int = 0
-    t: float = 0.0
-    dt: float = 0.0
-    distance: float = 0.0
-    num_athlete: int = 0
-    ended = False
-    render = False
+    # Athlete status
     waiting: dict[float, list[Athlete]] = {}
     skiing: list[Athlete] = []
     done: list[Athlete] = []
-    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
+    # Time, distance
+    t: float = 0.0
+    dt: float = 0.0
+    distance: float = 0.0
+
+    # Simulation status
+    num_athlete: int = 0
+    ended = False
     use_random = False
+
+    # Rendering
+    frame: int = 0
+    render = False
+    colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
     def load_csv(self, path_file: str) -> None:
         """Load the csv, create the list of athletes waiting"""
@@ -61,7 +68,9 @@ class Simulation:
             self.num_athlete += 1
             r = ranks
             ranks += 1
-            A = Athlete(self.data["name"][i], r, dict(self.data.iloc[i]), self.use_random)
+            A = Athlete(
+                self.data["name"][i], r, dict(self.data.iloc[i]), self.use_random
+            )
             t = time_convert_to_float(A.get("jump_time_diff"))
             if t in self.waiting:
                 self.waiting[t].append(A)
@@ -83,7 +92,7 @@ class Simulation:
         for i in self.waiting:
             for j in range(len(self.waiting[i])):
                 self.waiting[i][j].avg_speed = self.guess_avg_speed(self.waiting[i][j])
-        self.t = .0
+        self.t = 0.0
         self.frame = 0
         self.ended = False
         for a in self.waiting[self.t]:
@@ -94,30 +103,31 @@ class Simulation:
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 5))
         ax.set_xlabel(f"Distance (in m)")
         ax.set_ylabel("Starting position")
-        ax.set_ylim([0, self.num_athlete+2])
+        ax.set_ylim([0, self.num_athlete + 2])
         xvals = []
         for p in self.frames[frame]:
-            c = self.colors[(p-1)%len(self.colors)]
+            c = self.colors[(p - 1) % len(self.colors)]
             data = self.frames[frame][p]
             ax.plot(data[1:], [p, p], color=c, label=f"{data[0]}")
             d = abs(data[2] - data[1])
-            x = data[1] + d/2 * (1 + 0.2*((p%3)-1))
+            x = data[1] + d / 2 * (1 + 0.2 * ((p % 3) - 1))
             if (x < data[1]) or (x > data[2]):
                 print(data[1], data[2], p)
             xvals.append(x)
         labelLines(ax.get_lines(), xvals=xvals)
         fig.savefig(os.path.join("imgs", f"{frame:05}.png"))
         plt.close(fig)
-        print(f"{len(os.listdir('imgs'))/len(self.frames)*100:4.4}% is done  ", end="\r")
+        print(
+            f"{len(os.listdir('imgs'))/len(self.frames)*100:4.4}% is done  ", end="\r"
+        )
 
     def write(self) -> None:
         pool = multiprocessing.Pool()
         shutil.rmtree("imgs")
         os.makedirs("imgs", exist_ok=True)
-        pool.map(self.save_frame, range(1, len(self.frames)+1))
+        pool.map(self.save_frame, range(1, len(self.frames) + 1))
 
-
-    def update_data(self):
+    def update_data(self) -> None:
         all_athlete = []
         for l in self.waiting:
             all_athlete += self.waiting[l]
@@ -143,9 +153,8 @@ class Simulation:
         # self.time[a.name][self.frame] = [0, a.time]
         # self.dist[a.name][self.frame] = [a.starting_place, a.starting_place]
 
-    def compare_positions(self) -> list:
-        """ Plot the starting and ending position and the name for each athlete """
-        data = []
+    def compare_positions(self) -> None:
+        """Plot the starting and ending position and the name for each athlete"""
         x_start = 0
         x_end = 5
         x_mid = 0.5 * (x_end - x_start)
@@ -155,9 +164,13 @@ class Simulation:
             y_start = a.starting_place
             y_end = a.rank
             plt.plot([x_start, x_end], [y_start, y_end])
-            plt.text(x_end + x_mid / 50, y_end - 0.25, f"{a.name}: {a.starting_place:02} -> {a.rank:02}")
+            plt.text(
+                x_end + x_mid / 50,
+                y_end - 0.25,
+                f"{a.name}: {a.starting_place:02} -> {a.rank:02}",
+            )
         plt.show()
-        return data
+
 
 class SimpleSim(Simulation):
     """A simple simulation without collision, air resistance, or anything really"""
@@ -192,12 +205,14 @@ class SimpleSim(Simulation):
 
         for i in range(len(self.skiing)):
             for j in range(len(self.skiing)):
-                if (self.skiing[i].distance > self.skiing[j].distance) and (self.skiing[i].rank > self.skiing[j].rank):
+                if (self.skiing[i].distance > self.skiing[j].distance) and (
+                    self.skiing[i].rank > self.skiing[j].rank
+                ):
                     self.skiing[i].overtake(self.skiing[j])
 
         if len(self.skiing) == len(self.waiting) == 0:
             self.ended = True
-        
+
         self.update_data()
 
 
@@ -235,7 +250,7 @@ class SlitstreamSim(Simulation):
 
             can_activate_boost = False
             for j in range(0, len(self.skiing)):
-                if (i == j):
+                if i == j:
                     continue
                 other = self.skiing[j]
                 d = other.distance - a.distance
@@ -259,10 +274,12 @@ class SlitstreamSim(Simulation):
 
         for i in range(len(self.skiing)):
             for j in range(len(self.skiing)):
-                if (self.skiing[i].distance > self.skiing[j].distance) and (self.skiing[i].rank > self.skiing[j].rank):
+                if (self.skiing[i].distance > self.skiing[j].distance) and (
+                    self.skiing[i].rank > self.skiing[j].rank
+                ):
                     self.skiing[i].overtake(self.skiing[j])
 
         if len(self.skiing) == len(self.waiting) == 0:
             self.ended = True
-        
+
         self.update_data()
