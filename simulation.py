@@ -19,7 +19,7 @@ def time_convert_to_str(time: int | float) -> str:
     out = ""
     h = time // 3600
     if h != 0:
-        out = f"{h}:"
+        out = f"{int(h)}:"
         time -= h * 3600
     # We want to keep the decisecond
     return f"{out}{int(time // 60):02}:{int(time - (time//60)*60):02}"
@@ -249,23 +249,32 @@ class SlitstreamSim(Simulation):
             a = self.skiing[i]
 
             can_activate_boost = False
+            force_change = False
+            d = 0.0
             for j in range(0, len(self.skiing)):
                 if i == j:
                     continue
                 other = self.skiing[j]
                 d = other.distance - a.distance
-                if d < 2.5 and d > 0.5:
+                if d < 2.0 and d > 0.5:
+                    # If the athlete in front is slower by more than 1km/h, he is overtaken
+                    if other.avg_speed < (a.avg_speed - 0.278): # The speed are stored in m/s
+                        force_change = True
                     can_activate_boost = True
                     break
 
-            if not self.skiing[i].boost.is_active(self.t):
+            if not (force_change or self.skiing[i].boost.is_active(self.t)):
                 if can_activate_boost:
                     if random.random() < self.prob_activation_boost:
                         self.skiing[i].boost.change(self.t)
                 else:
                     self.skiing[i].boost.reset()
 
-            self.skiing[i].update(self.dt)
+            if force_change:
+                # Go a little further than just the position
+                self.skiing[i].update(self.dt, d / self.dt * 2)
+            else:
+                self.skiing[i].update(self.dt)
             if self.skiing[i].distance >= self.distance:
                 self.done.append(self.skiing[i])
                 self.skiing.pop(i)
