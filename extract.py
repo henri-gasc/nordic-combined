@@ -72,6 +72,8 @@ def get_distance(text: str) -> float:
 
 def extract(path_file_in: str, dir_file_out: str) -> None:
     """Use the other function in this file to extract all text from a pdf and write it to file having the name name as the pdf with _[distance] added at the end"""
+    print(f"Extracting {path_file_in} to {dir_file_out}")
+    os.makedirs(dir_file_out, exist_ok=True)
     base = os.path.basename(path_file_in)
     base = ".".join(base.split(".")[:-1])  # Remove last .* (extension)
     pdf = pypdf.PdfReader(path_file_in)
@@ -85,6 +87,18 @@ def extract(path_file_in: str, dir_file_out: str) -> None:
     path_out = os.path.join(dir_file_out, f"{base}_{distance}.csv")
     write_to_csv(path_out, records)
 
+def extract_pdfs(path: str) -> None:
+    path_current = os.path.join(pdfs_dir, path)
+    l = os.listdir(path_current)
+    if len(l) == 0:
+        return
+
+    for pdf in l:
+        pdf_path = os.path.join(path_current, pdf)
+        if ".pdf" == pdf[-4:]:
+            extract(pdf_path, os.path.join(csv_dir, path))
+        if os.path.isdir(pdf_path) and (pdf[:6].lower() == "season"):
+            extract_pdfs(os.path.join(path, pdf))
 
 pdfs_dir = "pdf_results"
 csv_dir = "extracted"
@@ -93,9 +107,4 @@ if __name__ == "__main__":
     l = os.listdir(pdfs_dir)
     if len(l) == 0:
         print("No pdf found. Put them in the results folder so they can be extracted")
-
-    for pdf_path in l:
-        if ".pdf" != pdf_path[-4:]:
-            continue
-        print(f"Doing {pdf_path}")
-        extract(os.path.join(pdfs_dir, pdf_path), csv_dir)
+    extract_pdfs("")
