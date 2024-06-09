@@ -1,6 +1,7 @@
 # Python
 .env
 __pycache__
+.mypy_cache
 
 # Data
 pdf_results

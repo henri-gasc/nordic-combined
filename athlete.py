@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import random
+from typing import override
+
 class Boost:
     """ The boost class. Stores information about each athlete's boost """
     def __init__(self) -> None:
@@ -29,7 +32,7 @@ class Boost:
 class Athlete:
     """Store information about a athlete"""
 
-    def __init__(self, name: str, rank: int, data: dict[str, str]) -> None:
+    def __init__(self, name: str, rank: int, data: dict[str, str], random: bool = False) -> None:
         self.name = name
         self.data = data
         self.rank = rank
@@ -38,7 +41,9 @@ class Athlete:
         self.distance = .0
         self.avg_speed = .0
         self.boost = Boost()
+        self.random = random
 
+    @override
     def __str__(self) -> str:
         return f"{self.name}: at {self.distance}m/{self.time}s with {self.avg_speed}m/s"
 
@@ -52,6 +57,9 @@ class Athlete:
         s = speed
         if s is None:
             s = self.avg_speed
+            if self.random:
+                # Add some random to the speed of the athlete
+                s *= (random.random() - 0.5) / 10
         if self.boost.is_active(self.time):
             s *= 1.5
         self.distance += s * dt

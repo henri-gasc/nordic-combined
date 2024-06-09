@@ -45,6 +45,7 @@ class Simulation:
     skiing: list[Athlete] = []
     done: list[Athlete] = []
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    use_random = False
 
     def load_csv(self, path_file: str) -> None:
         """Load the csv, create the list of athletes waiting"""
@@ -60,7 +61,7 @@ class Simulation:
             self.num_athlete += 1
             r = ranks
             ranks += 1
-            A = Athlete(self.data["name"][i], r, dict(self.data.iloc[i]))
+            A = Athlete(self.data["name"][i], r, dict(self.data.iloc[i]), self.use_random)
             t = time_convert_to_float(A.get("jump_time_diff"))
             if t in self.waiting:
                 self.waiting[t].append(A)
@@ -203,17 +204,18 @@ class SimpleSim(Simulation):
 class SlitstreamSim(Simulation):
     """A simple simulation without collision, air resistance, or anything really"""
 
-    prob_activation_boost = 0.5
+    prob_activation_boost = 0.90
 
     def __init__(self, dt: float) -> None:
         self.dt = dt
+        self.use_random = True
 
     def guess_avg_speed(self, a: Athlete) -> float:
         """Return the average speed"""
         t = time_convert_to_float(a.get("cross_time"))
         # s = self.distance / t
         # print(f"{a.name:30}: {(s * 3.6):.05} ({self.distance}m in {t}s)")
-        return self.distance / t + (random.random() - 0.5) # Can give boost or slow down
+        return self.distance / t
 
     def update(self) -> None:
         """Update the state of the simulation.
@@ -243,7 +245,7 @@ class SlitstreamSim(Simulation):
 
             if not self.skiing[i].boost.is_active(self.t):
                 if can_activate_boost:
-                    if random.random() > (1 - self.prob_activation_boost):
+                    if random.random() < self.prob_activation_boost:
                         self.skiing[i].boost.change(self.t)
                 else:
                     self.skiing[i].boost.reset()
