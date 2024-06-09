@@ -27,7 +27,7 @@ def select(l: list[str]) -> int:
     if selected == -1:
         print("No race selected")
         exit(1)
-    return selected -1
+    return selected - 1
 
 
 l = os.listdir("extracted")

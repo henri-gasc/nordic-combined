@@ -23,7 +23,7 @@ def convert_to_list(text: str) -> list[dict[str, str]]:
     """Convert the text to a list of dict.
     This may not work for other format. If it is the case, send me the pdf"""
     records: list[dict[str, str]] = []
-    index_did_not = text.find("Did not ") # (Start or Finish)
+    index_did_not = text.find("Did not ")  # (Start or Finish)
     index_weather = text.find("WEATHER\n")
     end_index = index_did_not
     if index_did_not == -1:
@@ -54,7 +54,7 @@ def convert_to_list(text: str) -> list[dict[str, str]]:
         athlete["jump_rank"] = text_list[i + 7]
         athlete["jump_time_diff"] = text_list[i + 8]
         athlete["cross_time"] = text_list[i + 9]
-        if text_list[i+9] == "LAP":
+        if text_list[i + 9] == "LAP":
             # Skip athlete if they were lapped
             i += 11
             continue
@@ -100,6 +100,7 @@ def extract(path_file_in: str, dir_file_out: str) -> None:
     path_out = os.path.join(dir_file_out, f"{base}_{distance}.csv")
     write_to_csv(path_out, records)
 
+
 def extract_pdfs(path: str) -> None:
     path_current = os.path.join(pdfs_dir, path)
     l = os.listdir(path_current)
@@ -112,6 +113,7 @@ def extract_pdfs(path: str) -> None:
             extract(pdf_path, os.path.join(csv_dir, path))
         if os.path.isdir(pdf_path) and (pdf[:6].lower() == "season"):
             extract_pdfs(os.path.join(path, pdf))
+
 
 pdfs_dir = "pdf_results"
 csv_dir = "extracted"

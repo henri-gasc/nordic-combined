@@ -21,7 +21,7 @@ class Boost:
         self.start_boost: float = -1.0
 
     def change(self, t: float) -> None:
-        """ Change the state of the boost for this athlete """
+        """Change the state of the boost for this athlete"""
         if self.activate_start < 0:
             self.activate_start = t
         elif (t - self.activate_start) > self.time_activation:
@@ -42,9 +42,7 @@ class Boost:
 class Athlete:
     """Store information about a athlete"""
 
-    def __init__(
-        self, name: str, data: dict[str, str], random: bool = False
-    ) -> None:
+    def __init__(self, name: str, data: dict[str, str], random: bool = False) -> None:
         self.name = name
         self.data = data
         self.rank = -1
@@ -91,6 +89,6 @@ class Athlete:
             other.rank = tmp
         else:
             raise TypeError(f"'{other}' is not an instance of Athlete")
-    
+
     def start_time(self) -> float:
         return time_convert_to_float(self.get("jump_time_diff"))
