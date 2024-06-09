@@ -63,20 +63,21 @@ class Simulation:
             raise AttributeError("Cannot find the distance in the file name")
         self.distance = int(self.file.split("_")[-1].split(".")[0]) * 1000
 
-        ranks = 1
+        # For each record of athlete, create an Athlete object
+        rank = 1
         for i in range(len(self.data["name"])):
             self.num_athlete += 1
-            r = ranks
-            ranks += 1
             A = Athlete(
-                self.data["name"][i], r, dict(self.data.iloc[i]), self.use_random
+                self.data["name"][i], rank, dict(self.data.iloc[i]), self.use_random
             )
             t = time_convert_to_float(A.get("jump_time_diff"))
             if t in self.waiting:
                 self.waiting[t].append(A)
             else:
                 self.waiting[t] = [A]
+            rank += 1
 
+        # Rendering records
         self.time: dict[str, list[float]] = {name: [] for name in self.data["name"]}
         self.dist: dict[str, list[float]] = {name: [] for name in self.data["name"]}
         self.frames: dict[int, dict[int, tuple[int, float, float]]] = {}
@@ -89,17 +90,24 @@ class Simulation:
 
     def start(self) -> None:
         """Initialize the simulation"""
+
+        # Set the average speed for all athletes
         for i in self.waiting:
             for j in range(len(self.waiting[i])):
                 self.waiting[i][j].avg_speed = self.guess_avg_speed(self.waiting[i][j])
+        
+        # Reset some variables
         self.t = 0.0
         self.frame = 0
         self.ended = False
+
+        # Change the status of the first athletes
         for a in self.waiting[self.t]:
             self.skiing.append(a)
         self.waiting.pop(self.t)
 
-    def save_frame(self, frame: int) -> None:
+    def render_save_frame(self, frame: int) -> None:
+        """ Save the frame on disk. Written to be used via multiprocessing """
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 5))
         ax.set_xlabel(f"Distance (in m)")
         ax.set_ylabel("Starting position")
@@ -121,17 +129,22 @@ class Simulation:
             f"{len(os.listdir('imgs'))/len(self.frames)*100:4.4}% is done  ", end="\r"
         )
 
-    def write(self) -> None:
+    def render_write(self) -> None:
+        """ Create a multiprocessing pool to write all frames to disk """
         pool = multiprocessing.Pool()
         shutil.rmtree("imgs")
         os.makedirs("imgs", exist_ok=True)
-        pool.map(self.save_frame, range(1, len(self.frames) + 1))
+        pool.map(self.render_save_frame, range(1, len(self.frames) + 1))
 
-    def update_data(self) -> None:
+    def render_update_data(self) -> None:
+        """ Update the data used in rendering """
+        # Get all athletes
         all_athlete = []
         for l in self.waiting:
             all_athlete += self.waiting[l]
         all_athlete += self.skiing.copy() + self.done.copy()
+
+        # Keep the plotted window around the the min and max without a big zoom out
         m = min([a.distance for a in all_athlete])
         if m > 500:
             m -= 500
@@ -139,13 +152,14 @@ class Simulation:
             m = 0
 
         if self.ended:
+            # Fix the render for some time at the end
             for i in range(250):
-                self.add_data(m)
+                self.render_add_data(m)
                 self.frame += 1
         else:
-            self.add_data(m)
+            self.render_add_data(m)
 
-    def add_data(self, m: float) -> None:
+    def render_add_data(self, m: float) -> None:
         # There can not be* more than one athlete with a starting place, and they cannot be in self.skiing an self.done at the same time
         self.frames[self.frame] = {}
         for a in self.skiing.copy() + self.done.copy():
@@ -189,11 +203,13 @@ class SimpleSim(Simulation):
         print(time_convert_to_str(self.t), end="\r")
         self.frame += 1
         self.t += self.dt
+        # Start the available athletes
         if self.t in self.waiting:
             for a in self.waiting[self.t]:
                 self.skiing.append(a)
             self.waiting.pop(self.t)
 
+        # Update all athletes that are not finished
         i = 0
         while i < len(self.skiing):
             self.skiing[i].update(self.dt)
@@ -203,6 +219,7 @@ class SimpleSim(Simulation):
             else:
                 i += 1
 
+        # Exchange position for athletes if they were overtaken
         for i in range(len(self.skiing)):
             for j in range(len(self.skiing)):
                 if (self.skiing[i].distance > self.skiing[j].distance) and (
@@ -210,10 +227,11 @@ class SimpleSim(Simulation):
                 ):
                     self.skiing[i].overtake(self.skiing[j])
 
+        # If no more athletes are running or waiting, the simulation ended
         if len(self.skiing) == len(self.waiting) == 0:
             self.ended = True
 
-        self.update_data()
+        self.render_update_data()
 
 
 class SlitstreamSim(Simulation):
@@ -237,6 +255,7 @@ class SlitstreamSim(Simulation):
         If some athlete can now start the cross crountry, make them start.
         Remove the athlete from the race if they finished."""
         print(time_convert_to_str(self.t), end="\r")
+        # Update state and add skiing athletes
         self.frame += 1
         self.t += self.dt
         if self.t in self.waiting:
@@ -248,6 +267,7 @@ class SlitstreamSim(Simulation):
         while i < len(self.skiing):
             a = self.skiing[i]
 
+            # Test wether an athlete benifits from slipstream effect
             can_activate_boost = False
             force_change = False
             d = 0.0
@@ -263,6 +283,7 @@ class SlitstreamSim(Simulation):
                     can_activate_boost = True
                     break
 
+            # If slipstream, you get a boost
             if not (force_change or self.skiing[i].boost.is_active(self.t)):
                 if can_activate_boost:
                     if random.random() < self.prob_activation_boost:
@@ -270,6 +291,7 @@ class SlitstreamSim(Simulation):
                 else:
                     self.skiing[i].boost.reset()
 
+            # Update the position of the athletes
             if force_change:
                 # Go a little further than just the position
                 self.skiing[i].update(self.dt, d / self.dt * 2)
@@ -281,6 +303,7 @@ class SlitstreamSim(Simulation):
             else:
                 i += 1
 
+        # Exchange position for athletes if they were overtaken
         for i in range(len(self.skiing)):
             for j in range(len(self.skiing)):
                 if (self.skiing[i].distance > self.skiing[j].distance) and (
@@ -288,7 +311,8 @@ class SlitstreamSim(Simulation):
                 ):
                     self.skiing[i].overtake(self.skiing[j])
 
+        # If no more athletes are running or waiting, the simulation ended
         if len(self.skiing) == len(self.waiting) == 0:
             self.ended = True
 
-        self.update_data()
+        self.render_update_data()

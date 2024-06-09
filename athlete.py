@@ -15,13 +15,14 @@ class Boost:
         self.start_boost: float = -1.0
 
     def change(self, t: float) -> None:
+        """ Change the state of the boost for this athlete """
         if self.activate_start < 0:
             self.activate_start = t
         elif (t - self.activate_start) > self.time_activation:
             self.start_boost = t
 
     def is_active(self, t: float) -> bool:
-        """Return if an athelete has a boost or not"""
+        """Return if an athlete has a boost or not"""
         if self.start_boost < 0:
             return False
         return (t - self.start_boost) < self.time_boost
