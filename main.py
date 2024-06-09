@@ -67,13 +67,7 @@ while not sim.ended:
 
 sim.compare_positions()
 
-# print("The rank are as follow:")
-# for i in range(len(sim.done)):
-#     print(
-#         f"- {sim.done[i].rank:2}. {sim.done[i].name} in {simulation.time_convert_to_str(sim.done[i].time)}"
-#     )
-
-# sim.write()
+sim.render_write()
 
 # ffmpeg command:
 # ffmpeg -i imgs/%5d.png video.mp4

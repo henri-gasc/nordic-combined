@@ -134,6 +134,8 @@ class Simulation:
 
     def render_write(self) -> None:
         """ Create a multiprocessing pool to write all frames to disk """
+        if not self.render:
+            return
         pool = multiprocessing.Pool()
         shutil.rmtree("imgs")
         os.makedirs("imgs", exist_ok=True)
@@ -166,7 +168,7 @@ class Simulation:
         # There can not be* more than one athlete with a starting place, and they cannot be in self.skiing an self.done at the same time
         self.frames[self.frame] = {}
         for a in self.skiing.copy() + self.done.copy():
-            self.frames[self.frame][a.starting_place] = (a.rank, m, a.distance)
+            self.frames[self.frame][self.num_athlete - a.starting_place] = (self.num_athlete - a.rank, m, a.distance)
         # self.time[a.name][self.frame] = [0, a.time]
         # self.dist[a.name][self.frame] = [a.starting_place, a.starting_place]
 
@@ -178,8 +180,8 @@ class Simulation:
         plt.axis("off")
         plt.xlim(x_start, x_end + x_mid)
         for a in self.done:
-            y_start = a.expected_rank
-            y_end = a.rank
+            y_start = self.num_athlete - a.expected_rank
+            y_end = self.num_athlete - a.rank
             plt.plot([x_start, x_end], [y_start, y_end])
             plt.text(
                 x_end + x_mid / 50,
