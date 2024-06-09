@@ -277,10 +277,11 @@ class SlipstreamSim(Simulation):
         """Update the state of the simulation.
         If some athlete can now start the cross crountry, make them start.
         Remove the athlete from the race if they finished."""
-        # print(time_convert_to_str(self.t), end="\r")
+        print(time_convert_to_str(self.t), end="\r")
         # Update state and add skiing athletes
         self.frame += 1
         self.t += self.dt
+        self.t = round(self.t, 3)
         if self.t in self.waiting:
             for a in self.waiting[self.t]:
                 self.skiing.append(a)
