@@ -27,7 +27,7 @@ def select(l: list[str]) -> int:
     if selected == -1:
         print("No race selected")
         exit(1)
-    return selected
+    return selected -1
 
 
 l = os.listdir("extracted")
@@ -39,7 +39,7 @@ i = select(l)
 path_season = os.path.join("extracted", l[i])
 is_season = os.path.isdir(path_season) and (l[i][:6].lower() == "season")
 if is_season:
-    l = os.listdir(path_season)
+    l = sorted(os.listdir(path_season))
     if len(l) == 0:
         print("There is no race data here")
         exit(1)
@@ -55,10 +55,11 @@ sim.load_csv(path)
 sim.render = True
 
 if is_season:
-    num = int(path.split(" ")[0])
+    num = int(os.path.basename(path).split(" ")[0])
     l = os.listdir(path_season)
     for race in l:
-        sim.prepare_race(os.path.join(path_season, race))
+        if int(race.split(" ")[0]) < num:
+            sim.prepare_race(os.path.join(path_season, race))
 
 sim.start()
 while not sim.ended:

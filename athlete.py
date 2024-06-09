@@ -5,6 +5,12 @@ import random
 from typing import override
 
 
+def time_convert_to_float(time: str) -> float:
+    """Split time at : and return the time in seconds"""
+    m, s = time.split(":")
+    return float(m) * 60 + float(s)
+
+
 class Boost:
     """The boost class. Stores information about each athlete's boost"""
 
@@ -49,7 +55,11 @@ class Athlete:
         self.boost = Boost()
         self.random = random
         self.total_time = 0.0
-        self.expected_rank = int(self.get("rank"))
+        self.total_distance = 0.0
+        r = self.get("rank")
+        if (type(r) == str) and (r[:3] == "PF "):
+            r = r[3:]
+        self.expected_rank = int(r)
 
     @override
     def __str__(self) -> str:
@@ -80,3 +90,6 @@ class Athlete:
             other.rank = tmp
         else:
             raise TypeError(f"'{other}' is not an instance of Athlete")
+    
+    def start_time(self) -> float:
+        return time_convert_to_float(self.get("jump_time_diff"))
