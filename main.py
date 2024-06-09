@@ -50,7 +50,7 @@ else:
     path = path_season
 
 sim = simulation.SlipstreamSim(0.05)
-# sim = simulation.SimpleSim(1)
+# sim = simulation.SimpleSim(0.05)
 sim.load_csv(path)
 sim.render = False
 

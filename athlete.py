@@ -32,7 +32,7 @@ class Boost:
         if self.start_boost < 0:
             return False
         return (t - self.start_boost) < self.time_boost
-    
+
     def is_charging(self, t: float) -> bool:
         return self.activate_start != -1
 
@@ -58,7 +58,7 @@ class Athlete:
     # Slipstream
     boost = Boost()
     energy = 100.0
-    locked = False # Control the ability to get the boost
+    locked = False  # Control the ability to get the boost
 
     def __init__(self, name: str, data: dict[str, str], random: bool = False) -> None:
         self.name = name
@@ -73,7 +73,9 @@ class Athlete:
     @override
     def __str__(self) -> str:
         # return f"{self.name} ({self.rank})"
-        return f"{self.name}: at {self.distance}m / {self.time}s with {self.avg_speed}m/s"
+        return (
+            f"{self.name}: at {self.distance}m / {self.time}s with {self.avg_speed}m/s"
+        )
 
     def get(self, name: str) -> str:
         """Query a specific column"""

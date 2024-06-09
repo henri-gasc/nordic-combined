@@ -225,7 +225,6 @@ class Simulation:
         n = self.num_athlete
         assert len(self.done) == n, "Why are those values not equal ?"
 
-
         exact_position = 0
         real_rank = ["" for _ in range(n)]
         simu_rank = ["" for _ in range(n)]
@@ -241,8 +240,8 @@ class Simulation:
         afters_real: dict[str, list[str]] = {}
         afters_simu: dict[str, list[str]] = {}
         for i in range(n):
-            afters_real[real_rank[i]] = real_rank[i+1:]
-            afters_simu[simu_rank[i]] = simu_rank[i+1:]
+            afters_real[real_rank[i]] = real_rank[i + 1 :]
+            afters_simu[simu_rank[i]] = simu_rank[i + 1 :]
 
         adapted_position = 0
         total = int((n - 1) * n / 2)
@@ -251,8 +250,12 @@ class Simulation:
                 if after in afters_simu[a]:
                     adapted_position += 1
 
-        print(f"Exact position: {exact_position} / {n} ({(exact_position/n*100):6.3}%)")
-        print(f"Adapted metric: {adapted_position} / {total} = ({(adapted_position/total*100):6.3}%)")
+        print(
+            f"\nExact position: {exact_position} / {n} ({(exact_position/n*100):6.3}%)"
+        )
+        print(
+            f"Adapted metric: {adapted_position} / {total} = ({(adapted_position/total*100):6.3}%)"
+        )
 
     def start_update(self) -> None:
         self.t = round(self.t + self.dt, 3)
@@ -286,7 +289,7 @@ class SimpleSim(Simulation):
         """Update the state of the simulation.
         If some athlete can now start the cross crountry, make them start.
         Remove the athlete from the race if they finished."""
-        
+
         self.start_update()
 
         # Update all athletes that are not finished
@@ -363,6 +366,7 @@ class SlipstreamSim(Simulation):
                         force_change = True
                     can_activate_boost = True
                     break
+
 
             # If slipstream, you get a boost
             if not (force_change or self.skiing[i].boost.is_active(self.t)):
