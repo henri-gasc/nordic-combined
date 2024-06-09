@@ -219,6 +219,58 @@ class Simulation:
             self.frame += 1
             self.render_update_data()
 
+    def correctness(self) -> None:
+        if not self.ended:
+            raise ValueError("Cannot use this function if the simulation did not end")
+        n = self.num_athlete
+        assert len(self.done) == n, "Why are those values not equal ?"
+
+
+        exact_position = 0
+        real_rank = ["" for _ in range(n)]
+        simu_rank = ["" for _ in range(n)]
+        for i in range(n):
+            er = self.done[i].expected_rank
+            sr = self.done[i].rank
+            # Count the number of exact position
+            if er == sr:
+                exact_position += 1
+            real_rank[er - 1] = self.done[i].name
+            simu_rank[sr - 1] = self.done[i].name
+
+        afters_real: dict[str, list[str]] = {}
+        afters_simu: dict[str, list[str]] = {}
+        for i in range(n):
+            afters_real[real_rank[i]] = real_rank[i+1:]
+            afters_simu[simu_rank[i]] = simu_rank[i+1:]
+
+        adapted_position = 0
+        total = int((n - 1) * n / 2)
+        for a in afters_real:
+            for after in afters_real[a]:
+                if after in afters_simu[a]:
+                    adapted_position += 1
+
+        print(f"Exact position: {exact_position} / {n} ({(exact_position/n*100):6.3}%)")
+        print(f"Adapted metric: {adapted_position} / {total} = ({(adapted_position/total*100):6.3}%)")
+
+    def start_update(self) -> None:
+        self.t = round(self.t + self.dt, 3)
+
+        if self.t in self.waiting:
+            for a in self.waiting[self.t]:
+                self.skiing.append(a)
+            self.waiting.pop(self.t)
+
+        text = time_convert_to_str(self.t)
+        m: Athlete | None = None
+        for a in self.skiing:
+            if (a.rank != -1) and ((m is None) or (a.rank < m.rank)):
+                m = a
+        if m is not None:
+            text = f"{text}, {int(self.distance - m.distance):05}m to go"
+        print(text, end="\r")
+
 
 class SimpleSim(Simulation):
     """A simple simulation without collision, air resistance, or anything really"""
@@ -234,13 +286,8 @@ class SimpleSim(Simulation):
         """Update the state of the simulation.
         If some athlete can now start the cross crountry, make them start.
         Remove the athlete from the race if they finished."""
-        print(time_convert_to_str(self.t), end="\r")
-        self.t += self.dt
-        # Start the available athletes
-        if self.t in self.waiting:
-            for a in self.waiting[self.t]:
-                self.skiing.append(a)
-            self.waiting.pop(self.t)
+        
+        self.start_update()
 
         # Update all athletes that are not finished
         i = 0
@@ -291,22 +338,9 @@ class SlipstreamSim(Simulation):
         """Update the state of the simulation.
         If some athlete can now start the cross crountry, make them start.
         Remove the athlete from the race if they finished."""
-        # Update state and add skiing athletes
-        self.t += self.dt
-        self.t = round(self.t, 3)
-        if self.t in self.waiting:
-            for a in self.waiting[self.t]:
-                self.skiing.append(a)
-            self.waiting.pop(self.t)
 
-        text = time_convert_to_str(self.t)
-        m: Athlete | None = None
-        for a in self.skiing:
-            if (a.rank != -1) and ((m is None) or (a.rank < m.rank)):
-                m = a
-        if m is not None:
-            text = f"{text}, {int(self.distance - m.distance):05}m to go"
-        print(text, end="\r")
+        # Update state and add skiing athletes
+        self.start_update()
 
         i = 0
         while i < len(self.skiing):
