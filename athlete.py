@@ -64,7 +64,7 @@ class Athlete:
             s = self.avg_speed
             if self.random:
                 # Add some random to the speed of the athlete
-                s *= (random.random() - 0.5) / 10
+                s *= 1 + (random.random() - 0.5) / 10
         if self.boost.is_active(self.time):
             s *= 1.5
         self.distance += s * dt
