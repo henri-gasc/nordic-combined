@@ -22,9 +22,17 @@ def is_date(text: str) -> bool:
 def convert_to_list(text: str) -> list[dict[str, str]]:
     """Convert the text to a list of dict.
     This may not work for other format. If it is the case, send me the pdf"""
-    records = []
-    end_index = text.find("Did not Finish")
+    records: list[dict[str, str]] = []
+    index_did_not = text.find("Did not ") # (Start or Finish)
+    index_weather = text.find("WEATHER\n")
+    end_index = index_did_not
+    if index_did_not == -1:
+        end_index = index_weather
+    if index_weather == -1:
+        end_index = index_did_not
     offset = text.find("TIME BEHIND\n")
+    if offset == -1:
+        return records
     if end_index == -1:
         text += " "
     text_list = text[offset + 12 : end_index].split("\n")
@@ -46,10 +54,15 @@ def convert_to_list(text: str) -> list[dict[str, str]]:
         athlete["jump_rank"] = text_list[i + 7]
         athlete["jump_time_diff"] = text_list[i + 8]
         athlete["cross_time"] = text_list[i + 9]
-        athlete["cross_rank"] = text_list[i + 10]
-        athlete["time_behind"] = text_list[i + 11]
-        records.append(athlete.copy())
-        i += 12
+        if text_list[i+9] == "LAP":
+            # Skip athlete if they were lapped
+            i += 11
+            continue
+        else:
+            athlete["cross_rank"] = text_list[i + 10]
+            athlete["time_behind"] = text_list[i + 11]
+            records.append(athlete.copy())
+            i += 12
     return records
 
 
