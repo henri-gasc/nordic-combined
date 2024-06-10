@@ -91,7 +91,8 @@ class Athlete:
         """Update the time and distance made by the athlete"""
         s = speed
 
-        if round(self.time, 0) == self.time:
+        # Record energy level every 30 seconds
+        if (round(self.time, 0) == self.time) and (self.time % 30 == 0):
             self.energies.append(self.energy)
 
         # If we did not get a speed, we compute it
@@ -107,17 +108,16 @@ class Athlete:
             else:
                 p = 3
             s = p / 100 * self.avg_speed
+            # s = self.avg_speed * self.energy / 100
 
-            # Decrease energy every update
-            self.energy = max(self.energy - 0.005 * self.dt, 0)
-
+        m = 1.0
         if self.random and (speed is None):
             # Add some random to the speed of the athlete
-            s *= 1 + (random.random() - 0.5) / 5
+            m = 1 + (random.random() - 0.5) / 5
 
         # If in slipstream, recover some energy
         if self.boost.is_charging(self.time):  # and (round(self.time, 0) == self.time):
-            self.energy = min(self.energy + 0.01 * self.dt, 100)
+            self.energy += 0.01 * self.dt
 
         # Allow boost if we were locked but now we have enough energy
         if self.locked and (self.energy > 70):
@@ -131,6 +131,16 @@ class Athlete:
                 # Allow the boost to still be "in reach"
                 self.boost.start_boost = self.time
                 self.locked = True
+
+        speed_before = s
+        s *= m
+        ds = speed_before - s
+        mult = 1.0
+        if ds < 0:  # Lose energy more quickly than regenerate it
+            mult = 1.2
+
+        # If ds > 0, regenerate energy, if < 0, lose some
+        self.energy = max(min(self.energy + mult * dt * ds, 100), 0)
 
         self.distance += s * dt
         self.time = round(self.time + dt, 3)

@@ -65,6 +65,7 @@ sim.start()
 while not sim.ended:
     sim.update()
 
+sim.show_energy_evol()
 sim.correctness()
 sim.compare_positions()
 

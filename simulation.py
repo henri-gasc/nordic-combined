@@ -191,11 +191,11 @@ class Simulation:
             plt.plot([x_start, x_end], [y_start, y_end])
             plt.text(
                 x_end + x_mid / 50,
-                y_end - 0.25,
+                y_end - 0.30,
                 f"{a.name} {a.starting_place:02}: {a.expected_rank:02} -> {a.rank:02}",
             )
-            if (a.expected_rank % 5) == 1:
-                plt.text(x_start - x_mid / 50, y_end - 0.25, f"{a.expected_rank:02}")
+            if (a.expected_rank % 5) == 0:
+                plt.text(x_start - x_mid / 20, y_start - 0.30, f"{a.expected_rank:02}")
         plt.show()
         plt.close()
 
@@ -244,6 +244,7 @@ class Simulation:
             real_rank[er - 1] = self.done[i].name
             simu_rank[sr - 1] = self.done[i].name
 
+        # List athletes before and after each athlete, both in the real race and in the simulation
         afters_real: dict[str, list[str]] = {}
         afters_simu: dict[str, list[str]] = {}
         before_real: dict[str, list[str]] = {}
@@ -254,6 +255,7 @@ class Simulation:
             before_real[real_rank[i]] = real_rank[:i]
             before_simu[simu_rank[i]] = simu_rank[:i]
 
+        # Count the number of athlete that are in the correct part (before and after an athlete)
         adapted_position = 0
         total = int((n - 1) * n)
         for a in afters_real:
@@ -271,6 +273,22 @@ class Simulation:
         print(
             f"Adapted metric: {adapted_position} / {total} = ({(adapted_position/total*100):6.3}%)"
         )
+
+    def show_energy_evol(self, num: int = 0) -> None:
+        """ Should only be used after the simulatio is done """
+        if num == -1:
+            r = range(self.num_athlete)
+        else:
+            r = range(num, num+1, 1)
+
+        plt.ylim(-5, 105)
+        for i in r:
+            athlete = self.done[i]
+            energy = athlete.energies
+            plt.plot(range(len(energy)), energy)
+
+        plt.show()
+        plt.close()
 
     def start_update(self) -> None:
         self.t = round(self.t + self.dt, 3)
