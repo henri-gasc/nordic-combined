@@ -65,8 +65,8 @@ sim.start()
 while not sim.ended:
     sim.update()
 
-sim.compare_positions()
 sim.correctness()
+sim.compare_positions()
 
 sim.render_write()
 

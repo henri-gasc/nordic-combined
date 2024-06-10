@@ -41,6 +41,7 @@ class Simulation:
 
     # Simulation status
     num_athlete: int = 0
+    max_place: int = -1
     ended = False
     use_random = False
 
@@ -64,8 +65,11 @@ class Simulation:
         # For each record of athlete, create an Athlete object
         for i in range(len(self.data["name"])):
             self.num_athlete += 1
-            A = Athlete(self.data["name"][i], dict(self.data.iloc[i]), self.use_random)
+            A = Athlete(
+                self.data["name"][i], self.dt, dict(self.data.iloc[i]), self.use_random
+            )
             self.all_athletes.append(A)
+            self.max_place = max(self.max_place, A.starting_place + 1)
 
         # Rendering records
         self.time: dict[str, list[float]] = {name: [] for name in self.data["name"]}
@@ -112,7 +116,7 @@ class Simulation:
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 5))
         ax.set_xlabel(f"Distance (in m)")
         ax.set_ylabel("Starting position")
-        ax.set_ylim([-2, self.num_athlete])
+        ax.set_ylim([0, self.max_place + 1])
         xvals = []
         for p in self.frames[frame]:
             c = self.colors[(p - 1) % len(self.colors)]
@@ -166,7 +170,7 @@ class Simulation:
         # There can not be* more than one athlete with a starting place, and they cannot be in self.skiing an self.done at the same time
         self.frames[self.frame] = {}
         for a in self.skiing.copy() + self.done.copy():
-            self.frames[self.frame][self.num_athlete - a.starting_place] = (
+            self.frames[self.frame][self.max_place - a.starting_place] = (
                 a.rank,
                 m,
                 a.distance,
@@ -190,7 +194,10 @@ class Simulation:
                 y_end - 0.25,
                 f"{a.name} {a.starting_place:02}: {a.expected_rank:02} -> {a.rank:02}",
             )
+            if (a.expected_rank % 5) == 1:
+                plt.text(x_start - x_mid / 50, y_end - 0.25, f"{a.expected_rank:02}")
         plt.show()
+        plt.close()
 
     def update_rank(self) -> None:
         places = {}
@@ -239,15 +246,23 @@ class Simulation:
 
         afters_real: dict[str, list[str]] = {}
         afters_simu: dict[str, list[str]] = {}
+        before_real: dict[str, list[str]] = {}
+        before_simu: dict[str, list[str]] = {}
         for i in range(n):
             afters_real[real_rank[i]] = real_rank[i + 1 :]
             afters_simu[simu_rank[i]] = simu_rank[i + 1 :]
+            before_real[real_rank[i]] = real_rank[:i]
+            before_simu[simu_rank[i]] = simu_rank[:i]
 
         adapted_position = 0
-        total = int((n - 1) * n / 2)
+        total = int((n - 1) * n)
         for a in afters_real:
             for after in afters_real[a]:
                 if after in afters_simu[a]:
+                    adapted_position += 1
+        for a in before_real:
+            for before in before_real[a]:
+                if before in before_simu[a]:
                     adapted_position += 1
 
         print(
@@ -272,6 +287,8 @@ class Simulation:
                 m = a
         if m is not None:
             text = f"{text}, {int(self.distance - m.distance):05}m to go"
+
+        text = f"{text}, {len(self.done)} / {self.num_athlete}"
         print(text, end="\r")
 
 
@@ -353,6 +370,7 @@ class SlipstreamSim(Simulation):
             can_activate_boost = False
             force_change = False
             d = 0.0
+
             for j in range(0, len(self.skiing)):
                 if i == j:
                     continue
@@ -362,11 +380,10 @@ class SlipstreamSim(Simulation):
                     # If the athlete in front is slower by more than 1km/h, he is overtaken
                     if other.avg_speed < (
                         a.avg_speed - 0.278
-                    ):  # The speed are stored in m/s
+                    ):  # The speed is stored in m/s
                         force_change = True
                     can_activate_boost = True
                     break
-
 
             # If slipstream, you get a boost
             if not (force_change or self.skiing[i].boost.is_active(self.t)):
