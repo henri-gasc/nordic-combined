@@ -76,6 +76,12 @@ class Simulation:
         self.dist: dict[str, list[float]] = {name: [] for name in self.data["name"]}
         self.frames: dict[int, dict[int, tuple[int, float, float]]] = {}
 
+    def update(self) -> None:
+        """Update the state of the simulation."""
+        raise NotImplementedError(
+            "Cannot use this class to simulate, please use a derived class"
+        )
+
     def guess_avg_speed(self, a: Athlete) -> float:
         """Return the average speed for an athlete"""
         raise NotImplementedError(
@@ -275,11 +281,11 @@ class Simulation:
         )
 
     def show_energy_evol(self, num: int = 0) -> None:
-        """ Should only be used after the simulatio is done """
+        """Should only be used after the simulatio is done"""
         if num == -1:
             r = range(self.num_athlete)
         else:
-            r = range(num, num+1, 1)
+            r = range(num, num + 1, 1)
 
         plt.ylim(-5, 105)
         for i in r:
