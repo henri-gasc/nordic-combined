@@ -106,14 +106,11 @@ class Athlete:
         if s is None:
             p: float
             # Energy level
-            if 80 <= self.energy:
-                p = 100
-            elif 50 <= self.energy < 90:
-                p = self.energy + 20
-            elif 10 <= self.energy < 50:
-                p = (5 * self.energy - 40) / 3
+            if 83 <= self.energy:
+                # If enough energy, go faster than your average speed
+                p = 125
             else:
-                p = 3
+                p = 0.9 * self.energy + 50
             s = p / 100 * self.avg_speed
             # s = self.avg_speed * self.energy / 100
 
