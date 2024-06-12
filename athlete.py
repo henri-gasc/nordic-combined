@@ -61,7 +61,9 @@ class Athlete:
     energy = 100.0
     locked = False  # Control the ability to get the boost
 
+    # Plot energy expenditure
     energies: list[float] = []
+    s = 0.0
 
     def __init__(
         self, name: str, dt: float, data: dict[str, str], random: bool = False
@@ -92,8 +94,13 @@ class Athlete:
         s = speed
 
         # Record energy level every 30 seconds
-        if (round(self.time, 0) == self.time) and (self.time % 30 == 0):
-            self.energies.append(self.energy)
+        if (round(self.time, 0) == self.time) and (self.time % 60 == 0):
+            if (dt == 0) or (self.s == 0):
+                pass
+            else:
+                self.energies.append(self.s * dt / 60)
+            self.s = 0
+        self.s += self.energy
 
         # If we did not get a speed, we compute it
         if s is None:

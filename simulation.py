@@ -298,7 +298,7 @@ class Simulation:
                 self.skiing.append(a)
             self.waiting.pop(self.t)
 
-        text = time_convert_to_str(self.t)
+        text = f"{time_convert_to_str(self.t)}, {len(self.done)} / {self.num_athlete}"
         m: Athlete | None = None
         for a in self.skiing:
             if (a.rank != -1) and ((m is None) or (a.rank < m.rank)):
@@ -306,7 +306,6 @@ class Simulation:
         if m is not None:
             text = f"{text}, {int(self.distance - m.distance):05}m to go"
 
-        text = f"{text}, {len(self.done)} / {self.num_athlete}"
         print(text, end="\r")
 
 
