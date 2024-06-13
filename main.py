@@ -86,7 +86,8 @@ def run(values: tuple[int | None, int | None, bool]) -> None:
 
 i = None
 j = None
-use_multi = False
+MULTI_DEFAULT = 10
+use_multi = -1
 use_render = False
 k = 0
 while k < len(sys.argv):
@@ -99,7 +100,13 @@ while k < len(sys.argv):
         k += 1
         j = int(sys.argv[k])
     elif (arg == "-m") or (arg == "--multi"):
-        use_multi = True
+        try:
+            use_multi = int(sys.argv[k+1])
+            k += 1
+        except ValueError:
+            use_multi = MULTI_DEFAULT
+        except IndexError:
+            use_multi = MULTI_DEFAULT
     elif (arg == "-r") or (arg == "--render"):
         use_render = True
     elif arg[-7:] == "main.py":
@@ -109,11 +116,11 @@ while k < len(sys.argv):
 
     k += 1
 
-if not use_multi:
+if use_multi == -1:
     run((i, j, use_render))
 else:
     pool = multiprocessing.Pool()
-    pool.map(run, [(i, j, use_render) for _ in range(20)])
+    pool.map(run, [(i, j, use_render) for _ in range(use_multi)])
 
 # ffmpeg command:
 # ffmpeg -i imgs/%5d.png video.mp4

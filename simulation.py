@@ -290,8 +290,8 @@ class Simulation:
         plt.ylim(-5, 105)
         for i in r:
             athlete = self.done[i]
-            energy = athlete.energies
-            plt.plot(range(len(energy)), energy)
+            energy = athlete.energies[athlete.name]
+            plt.plot([i * self.dt / 60 for i in range(len(energy))], energy)
 
         plt.show()
         plt.close()

@@ -62,7 +62,8 @@ class Athlete:
     locked = False  # Control the ability to get the boost
 
     # Plot energy expenditure
-    energies: list[float] = []
+    # For some reason, all athletes share the same 'energies' list
+    energies: dict[str, list[float]] = {}
     s = 0.0
 
     def __init__(
@@ -93,24 +94,18 @@ class Athlete:
         """Update the time and distance made by the athlete"""
         s = speed
 
-        # Record energy level every 30 seconds
-        if (round(self.time, 0) == self.time) and (self.time % 60 == 0):
-            if (dt == 0) or (self.s == 0):
-                pass
-            else:
-                self.energies.append(self.s * dt / 60)
-            self.s = 0
-        self.s += self.energy
-
         # If we did not get a speed, we compute it
         if s is None:
             p: float
+            x = self.energy
             # Energy level
-            if 83 <= self.energy:
+            if 83 <= x:
                 # If enough energy, go faster than your average speed
                 p = 125
+            elif 55 <= x:
+                p = 0.9 * x + 50
             else:
-                p = 0.9 * self.energy + 50
+                p = 1.3 * x + 28
             s = p / 100 * self.avg_speed
             # s = self.avg_speed * self.energy / 100
 
@@ -118,6 +113,7 @@ class Athlete:
         if self.random and (speed is None):
             # Add some random to the speed of the athlete
             m = 1 + (random.random() - 0.5) / 5
+        s *= m
 
         # If in slipstream, recover some energy
         if self.boost.is_charging(self.time):  # and (round(self.time, 0) == self.time):
@@ -136,19 +132,24 @@ class Athlete:
                 self.boost.start_boost = self.time
                 self.locked = True
 
-        speed_before = s
-        s *= m
-        ds = speed_before - s
+        ds = self.avg_speed - s
         mult = 1.0
-        if ds < 0:  # Lose energy more quickly than regenerate it
+        if ds < 0.0:  # Lose energy more quickly than regenerate it
             mult = 1.2
 
         # If ds > 0, regenerate energy, if < 0, lose some
-        self.energy = max(min(self.energy + mult * dt * ds, 100), 0)
+        re = mult * dt * ds / 10
+        self.energy = max(min(self.energy + re, 100), 0)
 
         self.distance += s * dt
         self.time = round(self.time + dt, 3)
         self.energy = round(self.energy, 6)
+
+        # Record energy level every 30 seconds
+        if self.name in self.energies:
+            self.energies[self.name].append(self.energy)
+        else:
+            self.energies[self.name] = [100, self.energy]
 
     def can_boost(self) -> bool:
         return (not self.locked) and (self.energy > 50)
