@@ -4,42 +4,7 @@
 import random
 from typing import override
 
-
-def time_convert_to_float(time: str) -> float:
-    """Split time at : and return the time in seconds"""
-    m, s = time.split(":")
-    return float(m) * 60 + float(s)
-
-
-class Boost:
-    """The boost class. Stores information about each athlete's boost"""
-
-    def __init__(self) -> None:
-        self.time_activation: float = 2.0
-        self.time_boost: float = 5.0
-        self.activate_start: float = -1.0
-        self.start_boost: float = -1.0
-
-    def change(self, t: float) -> None:
-        """Change the state of the boost for this athlete"""
-        if self.activate_start < 0:
-            self.activate_start = t
-        elif (t - self.activate_start) > self.time_activation:
-            self.start_boost = t
-
-    def is_active(self, t: float) -> bool:
-        """Return if an athlete has a boost or not"""
-        if self.start_boost < 0:
-            return False
-        return (t - self.start_boost) < self.time_boost
-
-    def is_charging(self, t: float) -> bool:
-        return self.activate_start != -1
-
-    def reset(self) -> None:
-        """Reset a boost"""
-        self.activate_start = -1
-        self.start_boost = -1
+import utils
 
 
 class Athlete:
@@ -57,9 +22,10 @@ class Athlete:
     total_distance = 0.0
 
     # Slipstream
-    boost = Boost()
+    boost = utils.Boost()
     energy = 100.0
     locked = False  # Control the ability to get the boost
+    in_slipstream = False
 
     # Plot energy expenditure
     # For some reason, all athletes share the same 'energies' list
@@ -107,7 +73,7 @@ class Athlete:
             else:
                 p = 1.3 * x + 28
             s = p / 100 * self.avg_speed
-            # s = self.avg_speed * self.energy / 100
+            # s = self.avg_speed
 
         m = 1.0
         if self.random and (speed is None):
@@ -164,4 +130,4 @@ class Athlete:
             raise TypeError(f"'{other}' is not an instance of Athlete")
 
     def start_time(self) -> float:
-        return time_convert_to_float(self.get("jump_time_diff"))
+        return utils.time_convert_to_float(self.get("jump_time_diff"))

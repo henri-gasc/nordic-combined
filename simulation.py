@@ -1,38 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import multiprocessing
-import os
 import random
-import shutil
 
 import matplotlib.pyplot as plt
 import pandas
-from labellines import labelLines
 
-from athlete import Athlete, time_convert_to_float
-
-
-def time_convert_to_str(time: int | float) -> str:
-    """Convert time (in seconds) to a string of format hh:mm:ss
-    The hh: is ommitted if equal to 0"""
-    out = ""
-    h = time // 3600
-    if h != 0:
-        out = f"{int(h)}:"
-        time -= h * 3600
-    # We want to keep the decisecond
-    return f"{out}{int(time // 60):02}:{int(time - (time//60)*60):02}"
+import athlete
+import render
+import utils
 
 
-class Simulation:
+class Simulation(render.SimuRender):
     """Base class for simulation"""
 
-    # Athlete status
-    waiting: dict[float, list[Athlete]] = {}
-    skiing: list[Athlete] = []
-    done: list[Athlete] = []
-    all_athletes: list[Athlete] = []
+    all_athletes: list[athlete.Athlete] = []
 
     # Time, distance
     t: float = 0.0
@@ -42,13 +24,7 @@ class Simulation:
     # Simulation status
     num_athlete: int = 0
     max_place: int = -1
-    ended = False
     use_random = False
-
-    # Rendering
-    frame: int = 0
-    render = False
-    colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
     def read_csv(self, path_file: str) -> tuple[pandas.DataFrame, int]:
         data = pandas.read_csv(path_file)
@@ -65,16 +41,16 @@ class Simulation:
         # For each record of athlete, create an Athlete object
         for i in range(len(self.data["name"])):
             self.num_athlete += 1
-            A = Athlete(
+            A = athlete.Athlete(
                 self.data["name"][i], self.dt, dict(self.data.iloc[i]), self.use_random
             )
             self.all_athletes.append(A)
             self.max_place = max(self.max_place, A.starting_place + 1)
 
         # Rendering records
-        self.time: dict[str, list[float]] = {name: [] for name in self.data["name"]}
-        self.dist: dict[str, list[float]] = {name: [] for name in self.data["name"]}
-        self.frames: dict[int, dict[int, tuple[int, float, float]]] = {}
+        self.time = {name: [] for name in self.data["name"]}
+        self.dist = {name: [] for name in self.data["name"]}
+        self.frames = {}
 
     def update(self) -> None:
         """Update the state of the simulation."""
@@ -82,7 +58,7 @@ class Simulation:
             "Cannot use this class to simulate, please use a derived class"
         )
 
-    def guess_avg_speed(self, a: Athlete) -> float:
+    def guess_avg_speed(self, a: athlete.Athlete) -> float:
         """Return the average speed for an athlete"""
         raise NotImplementedError(
             "Cannot use this class to simulate, please use a derived class"
@@ -116,73 +92,6 @@ class Simulation:
         for a in self.waiting[self.t]:
             self.skiing.append(a)
         self.waiting.pop(self.t)
-
-    def render_save_frame(self, frame: int) -> None:
-        """Save the frame on disk. Written to be used via multiprocessing"""
-        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 5))
-        ax.set_xlabel(f"Distance (in m)")
-        ax.set_ylabel("Starting position")
-        ax.set_ylim([0, self.max_place + 1])
-        xvals = []
-        for p in self.frames[frame]:
-            c = self.colors[(p - 1) % len(self.colors)]
-            data = self.frames[frame][p]
-            ax.plot(data[1:], [p, p], color=c, label=f"{data[0]}")
-            d = abs(data[2] - data[1])
-            x = data[1] + d / 2 * (1 + 0.2 * ((p % 3) - 1))
-            if (x < data[1]) or (x > data[2]):
-                print(data[1], data[2], p)
-            xvals.append(x)
-        labelLines(ax.get_lines(), xvals=xvals)
-        fig.savefig(os.path.join("imgs", f"{frame:05}.png"))
-        plt.close(fig)
-        print(
-            f"{len(os.listdir('imgs'))/len(self.frames)*100:4.4}% is done  ", end="\r"
-        )
-
-    def render_write(self) -> None:
-        """Create a multiprocessing pool to write all frames to disk"""
-        if not self.render:
-            return
-        pool = multiprocessing.Pool()
-        shutil.rmtree("imgs")
-        os.makedirs("imgs", exist_ok=True)
-        pool.map(self.render_save_frame, range(1, len(self.frames) + 1))
-
-    def render_update_data(self) -> None:
-        """Update the data used in rendering"""
-        # Get all athletes
-        all_athlete = []
-        for l in self.waiting:
-            all_athlete += self.waiting[l]
-        all_athlete += self.skiing.copy() + self.done.copy()
-
-        # Keep the plotted window around the the min and max without a big zoom out
-        m = min([a.distance for a in all_athlete])
-        if m > 500:
-            m -= 500
-        else:
-            m = 0
-
-        if self.ended:
-            # Fix the render for some time at the end
-            for i in range(250):
-                self.render_add_data(m)
-                self.frame += 1
-        else:
-            self.render_add_data(m)
-
-    def render_add_data(self, m: float) -> None:
-        # There can not be* more than one athlete with a starting place, and they cannot be in self.skiing an self.done at the same time
-        self.frames[self.frame] = {}
-        for a in self.skiing.copy() + self.done.copy():
-            self.frames[self.frame][self.max_place - a.starting_place] = (
-                a.rank,
-                m,
-                a.distance,
-            )
-        # self.time[a.name][self.frame] = [0, a.time]
-        # self.dist[a.name][self.frame] = [a.starting_place, a.starting_place]
 
     def compare_positions(self) -> None:
         """Plot the expected and real ending position and the name for each athlete"""
@@ -287,11 +196,25 @@ class Simulation:
         else:
             r = range(num, num + 1, 1)
 
+        # print(self.done[1].energies[-1])
+        # self.done[0].energies.append(325)
+        # print(self.done[1].energies[-1])
+
+        # print(self.done[1].energy)
+        # self.done[0].energy = 325
+        # print(self.done[1].energy)
+
+        # if self.done[0].energies == self.done[1].energies:
+        #     print("problem")
+
         plt.ylim(-5, 105)
         for i in r:
             athlete = self.done[i]
             energy = athlete.energies[athlete.name]
-            plt.plot([i * self.dt / 60 for i in range(len(energy))], energy)
+            plt.plot(
+                [(i * self.dt + athlete.start_time()) / 60 for i in range(len(energy))],
+                energy,
+            )
 
         plt.show()
         plt.close()
@@ -304,8 +227,8 @@ class Simulation:
                 self.skiing.append(a)
             self.waiting.pop(self.t)
 
-        text = f"{time_convert_to_str(self.t)}, {len(self.done)} / {self.num_athlete}"
-        m: Athlete | None = None
+        text = f"{utils.time_convert_to_str(self.t)}, {len(self.done)} / {self.num_athlete}"
+        m: athlete.Athlete | None = None
         for a in self.skiing:
             if (a.rank != -1) and ((m is None) or (a.rank < m.rank)):
                 m = a
@@ -321,9 +244,9 @@ class SimpleSim(Simulation):
     def __init__(self, dt: float) -> None:
         self.dt = dt
 
-    def guess_avg_speed(self, a: Athlete) -> float:
+    def guess_avg_speed(self, a: athlete.Athlete) -> float:
         """Return the average speed"""
-        return self.distance / time_convert_to_float(a.get("cross_time"))
+        return self.distance / utils.time_convert_to_float(a.get("cross_time"))
 
     def update(self) -> None:
         """Update the state of the simulation.
@@ -354,12 +277,12 @@ class SlipstreamSim(Simulation):
         self.dt = dt
         self.use_random = True
 
-    def guess_avg_speed(self, a: Athlete) -> float:
+    def guess_avg_speed(self, a: athlete.Athlete) -> float:
         """Return the average speed"""
         t = a.total_time
         d = a.total_distance
         if (t == 0) or (d == 0):
-            t = time_convert_to_float(a.get("cross_time"))
+            t = utils.time_convert_to_float(a.get("cross_time"))
             d = self.distance
         # s = self.distance / t
         # print(f"{a.name:30}: {(s * 3.6):.05} ({self.distance}m in {t}s)")
@@ -373,7 +296,7 @@ class SlipstreamSim(Simulation):
             for i in range(len(data.name)):
                 if data.name[i] == self.all_athletes[k].name:
                     self.all_athletes[k].total_distance += distance
-                    self.all_athletes[k].total_time += time_convert_to_float(
+                    self.all_athletes[k].total_time += utils.time_convert_to_float(
                         data.cross_time[i]
                     )
 
@@ -399,12 +322,8 @@ class SlipstreamSim(Simulation):
                     continue
                 other = self.skiing[j]
                 d = other.distance - a.distance
+                # The athlete has to be < 2m behind the guy in front
                 if d < 2.0 and d > 0.5:
-                    # If the athlete in front is slower by more than 1km/h, he is overtaken
-                    if other.avg_speed < (
-                        a.avg_speed - 0.278
-                    ):  # The speed is stored in m/s
-                        force_change = True
                     can_activate_boost = True
                     break
 
@@ -418,11 +337,7 @@ class SlipstreamSim(Simulation):
                     self.skiing[i].boost.reset()
 
             # Update the position of the athletes
-            if force_change:
-                # Go a little further than just the position
-                self.skiing[i].update(self.dt, d / self.dt * 2)
-            else:
-                self.skiing[i].update(self.dt)
+            self.skiing[i].update(self.dt)
 
             # Remove the athlete if went over the distance (finished)
             if self.skiing[i].distance >= self.distance:

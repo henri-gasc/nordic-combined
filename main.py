@@ -10,26 +10,7 @@ from matplotlib import animation
 from matplotlib.animation import FuncAnimation
 
 import simulation
-
-
-def select(l: list[str]) -> int:
-    if len(l) == 1:
-        return 0
-    for i in range(len(l)):
-        print(f"[{i+1:02}] {l[i]}")
-    selected = len(l)
-    while (-1 > selected) or (selected >= len(l)):
-        inp = input(f"Enter the number of the file you want to load: ")
-        if inp.lower()[0] == "q" or inp == "":
-            inp = "-1"
-        try:
-            selected = int(inp)
-        except ValueError:
-            print(f"{inp} is not a valid number")
-    if selected == -1:
-        print("No race selected")
-        exit(1)
-    return selected - 1
+import utils
 
 
 def start(i: int | None = None, j: int | None = None) -> simulation.Simulation:
@@ -38,7 +19,7 @@ def start(i: int | None = None, j: int | None = None) -> simulation.Simulation:
         print("There is no data extracted. Please use extract.py")
         exit(1)
     if i is None:
-        i = select(l)
+        i = utils.select(l)
 
     path_season = os.path.join("extracted", l[i])
     is_season = os.path.isdir(path_season) and (l[i][:6].lower() == "season")
@@ -49,7 +30,7 @@ def start(i: int | None = None, j: int | None = None) -> simulation.Simulation:
             exit(1)
         if j is None:
             print("Season detected. Which race do you want to simulate ?")
-            j = select(l)
+            j = utils.select(l)
         path = os.path.join(path_season, l[j])
     else:
         path = path_season
@@ -77,9 +58,9 @@ def run(values: tuple[int | None, int | None, bool]) -> None:
     while not sim.ended:
         sim.update()
 
-    # sim.show_energy_evol()
+    sim.show_energy_evol(-1)
     sim.correctness()
-    # sim.compare_positions()
+    sim.compare_positions()
 
     sim.render_write()
 
@@ -101,7 +82,7 @@ while k < len(sys.argv):
         j = int(sys.argv[k])
     elif (arg == "-m") or (arg == "--multi"):
         try:
-            use_multi = int(sys.argv[k+1])
+            use_multi = int(sys.argv[k + 1])
             k += 1
         except ValueError:
             use_multi = MULTI_DEFAULT
