@@ -37,6 +37,7 @@ class Simulation(render.SimuRender):
         """Load the csv, create the list of athletes waiting"""
         self.file = path_file
         self.data, self.distance = self.read_csv(path_file)
+        self.all_athletes = []
 
         # For each record of athlete, create an Athlete object
         for i in range(len(self.data["name"])):
@@ -88,7 +89,12 @@ class Simulation(render.SimuRender):
         self.frame = 0
         self.ended = False
 
+        self.done = []
+        self.skiing = []
+
         # Change the status of the first athletes
+        if self.t not in self.waiting:
+            return
         for a in self.waiting[self.t]:
             self.skiing.append(a)
         self.waiting.pop(self.t)
@@ -141,21 +147,31 @@ class Simulation(render.SimuRender):
             self.frame += 1
             self.render_update_data()
 
-    def correctness(self) -> None:
+    def excat_rate(self) -> (float, float, float):
         if not self.ended:
             raise ValueError("Cannot use this function if the simulation did not end")
         n = self.num_athlete
         assert len(self.done) == n, "Why are those values not equal ?"
-
         exact_position = 0
-        real_rank = ["" for _ in range(n)]
-        simu_rank = ["" for _ in range(n)]
         for i in range(n):
             er = self.done[i].expected_rank
             sr = self.done[i].rank
             # Count the number of exact position
             if er == sr:
                 exact_position += 1
+        return (exact_position, n, exact_position / n * 100)
+
+    def adapt_rate(self) -> (float, float, float):
+        if not self.ended:
+            raise ValueError("Cannot use this function if the simulation did not end")
+        n = self.num_athlete
+        assert len(self.done) == n, "Why are those values not equal ?"
+
+        real_rank = ["" for _ in range(n)]
+        simu_rank = ["" for _ in range(n)]
+        for i in range(n):
+            er = self.done[i].expected_rank
+            sr = self.done[i].rank
             real_rank[er - 1] = self.done[i].name
             simu_rank[sr - 1] = self.done[i].name
 
@@ -182,11 +198,18 @@ class Simulation(render.SimuRender):
                 if before in before_simu[a]:
                     adapted_position += 1
 
+        return (adapted_position, total, adapted_position / total * 100)
+
+    def correctness(self) -> None:
+        exact_position, n, per_e = self.excat_rate()
+        adapted_position, total, per_a = self.adapt_rate()
+        n = self.num_athlete
+
         print(
-            f"\nExact position: {exact_position} / {n} ({(exact_position/n*100):6.3}%)"
+            f"\nExact position: {exact_position} / {n} ({per_e:6.3}%)"
         )
         print(
-            f"Adapted metric: {adapted_position} / {total} = ({(adapted_position/total*100):6.3}%)"
+            f"Adapted metric: {adapted_position} / {total} = ({per_a:6.3}%)"
         )
 
     def show_energy_evol(self, num: int = 0) -> None:
@@ -206,16 +229,48 @@ class Simulation(render.SimuRender):
 
         # if self.done[0].energies == self.done[1].energies:
         #     print("problem")
-
-        plt.ylim(-5, 105)
+        done = 0
+        print("")
+        # plt.ylim(-5, 105)
         for i in r:
             athlete = self.done[i]
-            energy = athlete.energies[athlete.name]
-            plt.plot(
-                [(i * self.dt + athlete.start_time()) / 60 for i in range(len(energy))],
-                energy,
-            )
+            speed = athlete.speeds[athlete.name]
+            # plt.plot(
+            #     [(i + athlete.start_time()) / 60 for i in range(len(energy))],
+            #     [i * 3.6 for i in energy],
+            # )
 
+            sample_per_min = 60 / self.dt
+            avg = []
+            for i in range(len(speed)):
+                if i < sample_per_min:
+                    min = 0.0
+                    max = sample_per_min
+                elif len(speed) - i < sample_per_min:
+                    min = len(speed) - sample_per_min
+                    max = len(speed)
+                else:
+                    min = i - sample_per_min // 2
+                    max = i + sample_per_min // 2 + 1
+                avg.append(sum(speed[int(min):int(max)]) / len(speed[int(min):int(max)]))
+
+            plt.plot(
+                [(i * self.dt + athlete.start_time()) / 60 for i in range(len(speed))],
+                [i * 3.6 * 3 for i in avg],
+            )
+            print(f"{done} / {len(r)}", end="\r")
+            done += 1
+
+        # for i in r:
+        #     athlete = self.done[i]
+        #     energy = athlete.energies[athlete.name]
+        #     plt.plot(
+        #         [(i * self.dt + athlete.start_time()) / 60 for i in range(len(energy))],
+        #         energy,
+        #     )
+
+        plt.xlabel("Time (in m)")
+        plt.ylabel("Speed (in km/h)")
         plt.show()
         plt.close()
 
@@ -236,6 +291,12 @@ class Simulation(render.SimuRender):
             text = f"{text}, {int(self.distance - m.distance):05}m to go"
 
         print(text, end="\r")
+
+
+    def write(self) -> None:
+        with open("data", "a") as f:
+            for a in self.done:
+                f.write(f"{a.name}, {a.rank}, {a.expected_rank}, {a.time}\n")
 
 
 class SimpleSim(Simulation):
@@ -314,7 +375,6 @@ class SlipstreamSim(Simulation):
 
             # Test wether an athlete benifits from slipstream effect
             can_activate_boost = False
-            force_change = False
             d = 0.0
 
             for j in range(0, len(self.skiing)):
@@ -328,7 +388,7 @@ class SlipstreamSim(Simulation):
                     break
 
             # If slipstream, you get a boost
-            if not (force_change or self.skiing[i].boost.is_active(self.t)):
+            if not self.skiing[i].boost.is_active(self.t):
                 if can_activate_boost:
                     # Activate the boost only if the athlete can (but prob that it fails)
                     if a.can_boost() and (random.random() < self.prob_activation_boost):

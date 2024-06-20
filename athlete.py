@@ -30,6 +30,7 @@ class Athlete:
     # Plot energy expenditure
     # For some reason, all athletes share the same 'energies' list
     energies: dict[str, list[float]] = {}
+    speeds: dict[str, list[float]] = {}
     s = 0.0
 
     def __init__(
@@ -49,7 +50,8 @@ class Athlete:
     def __str__(self) -> str:
         # return f"{self.name} ({self.rank})"
         return (
-            f"{self.name}: at {self.distance}m / {self.time}s with {self.avg_speed}m/s"
+            # f"{self.name}: at {self.distance}m / {self.time}s with {self.avg_speed}m/s"
+            f"{self.name} ({self.expected_rank} -> {self.rank})"
         )
 
     def get(self, name: str) -> str:
@@ -101,7 +103,7 @@ class Athlete:
         ds = self.avg_speed - s
         mult = 1.0
         if ds < 0.0:  # Lose energy more quickly than regenerate it
-            mult = 1.2
+            mult = 1.3
 
         # If ds > 0, regenerate energy, if < 0, lose some
         re = mult * dt * ds / 10
@@ -111,11 +113,19 @@ class Athlete:
         self.time = round(self.time + dt, 3)
         self.energy = round(self.energy, 6)
 
+        self.s += s
+        # if round(self.time, 0) == self.time:
         # Record energy level every 30 seconds
+        if self.name in self.speeds:
+            self.speeds[self.name].append(self.s)
+        else:
+            self.speeds[self.name] = [self.s]
+        self.s = 0
+
         if self.name in self.energies:
             self.energies[self.name].append(self.energy)
         else:
-            self.energies[self.name] = [100, self.energy]
+            self.energies[self.name] = [self.energy]
 
     def can_boost(self) -> bool:
         return (not self.locked) and (self.energy > 50)
