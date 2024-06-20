@@ -111,7 +111,7 @@ def extract_pdfs(path: str) -> None:
         pdf_path = os.path.join(path_current, pdf)
         if ".pdf" == pdf[-4:]:
             extract(pdf_path, os.path.join(csv_dir, path))
-        if os.path.isdir(pdf_path) and (pdf[:6].lower() == "season"):
+        if os.path.isdir(pdf_path):
             extract_pdfs(os.path.join(path, pdf))
 
 

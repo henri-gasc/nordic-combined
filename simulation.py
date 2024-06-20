@@ -167,7 +167,7 @@ class Simulation(render.SimuRender):
         n = self.num_athlete
         assert len(self.done) == n, "Why are those values not equal ?"
 
-        real_rank = ["" for _ in range(n)]
+        real_rank = ["" for _ in range(max([a.expected_rank for a in self.done]))]
         simu_rank = ["" for _ in range(n)]
         for i in range(n):
             er = self.done[i].expected_rank
@@ -181,6 +181,8 @@ class Simulation(render.SimuRender):
         before_real: dict[str, list[str]] = {}
         before_simu: dict[str, list[str]] = {}
         for i in range(n):
+            if real_rank[i] == "":
+                continue
             afters_real[real_rank[i]] = real_rank[i + 1 :]
             afters_simu[simu_rank[i]] = simu_rank[i + 1 :]
             before_real[real_rank[i]] = real_rank[:i]
@@ -232,45 +234,45 @@ class Simulation(render.SimuRender):
         done = 0
         print("")
         # plt.ylim(-5, 105)
-        for i in r:
-            athlete = self.done[i]
-            speed = athlete.speeds[athlete.name]
-            # plt.plot(
-            #     [(i + athlete.start_time()) / 60 for i in range(len(energy))],
-            #     [i * 3.6 for i in energy],
-            # )
-
-            sample_per_min = 60 / self.dt
-            avg = []
-            for i in range(len(speed)):
-                if i < sample_per_min:
-                    min = 0.0
-                    max = sample_per_min
-                elif len(speed) - i < sample_per_min:
-                    min = len(speed) - sample_per_min
-                    max = len(speed)
-                else:
-                    min = i - sample_per_min // 2
-                    max = i + sample_per_min // 2 + 1
-                avg.append(sum(speed[int(min):int(max)]) / len(speed[int(min):int(max)]))
-
-            plt.plot(
-                [(i * self.dt + athlete.start_time()) / 60 for i in range(len(speed))],
-                [i * 3.6 * 3 for i in avg],
-            )
-            print(f"{done} / {len(r)}", end="\r")
-            done += 1
-
         # for i in r:
         #     athlete = self.done[i]
-        #     energy = athlete.energies[athlete.name]
+        #     speed = athlete.speeds[athlete.name]
+        #     # plt.plot(
+        #     #     [(i + athlete.start_time()) / 60 for i in range(len(energy))],
+        #     #     [i * 3.6 for i in energy],
+        #     # )
+
+        #     sample_per_min = 60 / self.dt
+        #     avg = []
+        #     for i in range(len(speed)):
+        #         if i < sample_per_min:
+        #             min = 0.0
+        #             max = sample_per_min
+        #         elif len(speed) - i < sample_per_min:
+        #             min = len(speed) - sample_per_min
+        #             max = len(speed)
+        #         else:
+        #             min = i - sample_per_min // 2
+        #             max = i + sample_per_min // 2 + 1
+        #         avg.append(sum(speed[int(min):int(max)]) / len(speed[int(min):int(max)]))
+
         #     plt.plot(
-        #         [(i * self.dt + athlete.start_time()) / 60 for i in range(len(energy))],
-        #         energy,
+        #         [(i * self.dt + athlete.start_time()) / 60 for i in range(len(speed))],
+        #         [i * 3.6 for i in avg],
         #     )
+        #     print(f"{done} / {len(r)}", end="\r")
+        #     done += 1
+
+        for i in r:
+            athlete = self.done[i]
+            energy = athlete.energies[athlete.name]
+            plt.plot(
+                [(i * self.dt + athlete.start_time()) / 60 for i in range(len(energy))],
+                energy,
+            )
 
         plt.xlabel("Time (in m)")
-        plt.ylabel("Speed (in km/h)")
+        plt.ylabel("Energy level (in %)")
         plt.show()
         plt.close()
 
@@ -297,6 +299,20 @@ class Simulation(render.SimuRender):
         with open("data", "a") as f:
             for a in self.done:
                 f.write(f"{a.name}, {a.rank}, {a.expected_rank}, {a.time}\n")
+
+    def give_points(self) -> dict[str, int]:
+        assert self.ended
+        print("")
+        points = {}
+        values = [100, 90, 80, 70, 60, 55, 52, 49, 46, 43, 40, 38, 36, 34, 32, 30, 28, 26, 24, 22, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+        for a in self.done:
+            r = a.rank - 1
+            if r >= len(values):
+                continue
+            points[a.name] = values[r]
+            print(f"{a.name}, {values[r]}")
+            # print(f"{a.name} ({a.rank}) -> {values[a.rank]}")
+        return points
 
 
 class SimpleSim(Simulation):

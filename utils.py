@@ -13,14 +13,24 @@ def time_convert_to_str(time: int | float) -> str:
     # We want to keep the decisecond
     return f"{out}{int(time // 60):02}:{int(time - (time//60)*60):02}"
 
+def extract_date(filename: str) -> tuple[int, int, int]:
+    parts = filename.split(" ")
+    if parts[-1][0] == "S":
+        date = parts[-2]
+    else:
+        date = parts[-1][:8]
+    year = int(date[-4:])
+    month = int(date[2:-4])
+    day = int(date[:2])
+    return (year, month, day)
 
 def select(l: list[str]) -> int:
     if len(l) == 1:
         return 0
     for i in range(len(l)):
         print(f"[{i+1:02}] {l[i]}")
-    selected = len(l)
-    while (-1 > selected) or (selected >= len(l)):
+    selected = len(l) + 1
+    while (-1 > selected) or (selected > len(l)):
         inp = input(f"Enter the number of the file you want to load: ")
         if inp.lower()[0] == "q" or inp == "":
             inp = "-1"
