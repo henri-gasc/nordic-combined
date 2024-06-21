@@ -35,6 +35,7 @@ class SimuRender:
         ax.set_xlabel(f"Distance (in m)")
         ax.set_ylabel("Starting position")
         ax.set_ylim([0, self.max_place + 1])
+        ax.invert_yaxis()
         xvals = []
         for p in self.frames[frame]:
             c = self.colors[(p - 1) % len(self.colors)]
@@ -88,7 +89,7 @@ class SimuRender:
         # There can not be* more than one athlete with a starting place, and they cannot be in self.skiing an self.done at the same time
         self.frames[self.frame] = {}
         for a in self.skiing.copy() + self.done.copy():
-            self.frames[self.frame][self.max_place - a.starting_place] = (
+            self.frames[self.frame][a.starting_place] = (
                 a.rank,
                 m,
                 a.distance,

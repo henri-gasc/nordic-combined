@@ -84,7 +84,7 @@ def run(values: tuple[int | None, int | None, bool, int]) -> tuple[tuple[float, 
     while not sim.ended:
         sim.update()
 
-    sim.show_energy_evol(-1)
+    # sim.show_energy_evol(-1)
     # sim.correctness()
     # sim.compare_positions()
 
