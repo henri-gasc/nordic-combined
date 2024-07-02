@@ -240,9 +240,9 @@ class Simulation(render.SimuRender):
         done = 0
         print("")
         # plt.ylim(-5, 105)
-        for i in r:
-            athlete = self.done[i]
-            print(athlete.name)
+        for a in r:
+            athlete = self.done[a]
+            # print(athlete.name)
             speed = athlete.speeds[athlete.name]
             # plt.plot(
             #     [(i + athlete.start_time()) / 60 for i in range(len(energy))],
@@ -252,10 +252,10 @@ class Simulation(render.SimuRender):
             sample_per_min = 60 / self.dt
             avg = []
             for i in range(len(speed)):
-                if i < sample_per_min:
+                if i < (sample_per_min // 2):
                     min = 0.0
                     max = sample_per_min
-                elif len(speed) - i < sample_per_min:
+                elif len(speed) - i < (sample_per_min // 2):
                     min = len(speed) - sample_per_min
                     max = len(speed)
                 else:
@@ -263,23 +263,36 @@ class Simulation(render.SimuRender):
                     max = i + sample_per_min // 2 + 1
                 avg.append(sum(speed[int(min):int(max)]) / len(speed[int(min):int(max)]))
 
+            # Code for aproximating energy multiplier
+            # above = 0
+            # below = 0
+            # for i in avg:
+            #     if i > athlete.avg_speed:
+            #         above += i - athlete.avg_speed
+            #     elif i < athlete.avg_speed:
+            #         below += athlete.avg_speed - i
+            # print(f"True avg: {athlete.avg_speed}, simulated average: {sum(speed)/len(speed)}")
+            # print(f"Above: {above}, below = {below}, diff = {above - below}")
+
             plt.plot(
                 [(i * self.dt + athlete.start_time()) / 60 for i in range(len(speed))],
-                [i * 3.6 * 3.22 for i in avg],
+                [i * 3.6 for i in avg],
             )
+            # plt.plot([0, athlete.time / 60], [athlete.avg_speed * 3.6, athlete.avg_speed * 3.6])
             print(f"{done} / {len(r)}", end="\r")
             done += 1
 
-        for i in r:
-            athlete = self.done[i]
-            energy = athlete.energies[athlete.name]
-            plt.plot(
-                [(i * self.dt + athlete.start_time()) / 60 for i in range(len(energy))],
-                energy,
-            )
+        # for i in r:
+        #     athlete = self.done[i]
+        #     energy = athlete.energies[athlete.name]
+        #     plt.plot(
+        #         [(i * self.dt + athlete.start_time()) / 60 for i in range(len(energy))],
+        #         energy,
+        #     )
 
         plt.xlabel("Time (in min)")
         # plt.ylabel("Energy level (in %)")
+        plt.ylabel("Speed (in km/h)")
         plt.show()
         plt.close()
 

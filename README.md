@@ -1,5 +1,19 @@
 # Nordic Combined
 
+## Code organization
+
+You can put the PDFs with the data in [`pdf_results`](./pdf_results/) and use the [extract](./extract.py) Python script to write the data from the PDFs to [`extracted`](./extracted/).
+
+You can use [`main.py`](./main.py) to run a simulation.
+
+[`athelete.py`](./athlete.py) contains the code pertaining to each athlete.  
+In [`render.py`](./render.py), you will find the base class for rendering and showing the simulation, whereas the code for the simulation proper is in [`simulation.py`](./simulation.py).  
+[`utils.py`](./utils.py) has utility functions, things too small to be in a separate file.  
+
+[`plot.py`](./plot.py) and [`parse.py`](./parse.py) are scripts used to plot things when needed. (for example, the evolution of the correctness rate for a single race for `plot.py`.)
+
+## Ideas
+
 Here are some ideas on how to visualize the simualtion:
 
 1. Still image. Work, but not very clear.

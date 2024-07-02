@@ -85,7 +85,7 @@ class Athlete:
 
         # If in slipstream, recover some energy
         if self.boost.is_charging(self.time):  # and (round(self.time, 0) == self.time):
-            self.energy += 0.01 * self.dt
+            self.energy += 0.1 * self.dt
 
         # Allow boost if we were locked but now we have enough energy
         if self.locked and (self.energy > 70):
@@ -103,7 +103,7 @@ class Athlete:
         ds = self.avg_speed - s
         mult = 1.0
         if ds < 0.0:  # Lose energy more quickly than regenerate it
-            mult = 1.3
+            mult = 2.47 # Got this number after running a race with a single athlete
 
         # If ds > 0, regenerate energy, if < 0, lose some
         re = mult * dt * ds / 10

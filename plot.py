@@ -7,6 +7,9 @@ simulate = {}
 exac = [75.2, 9.03, 17.6, 15.4, 8.17, 4.71, 12.0, 22.2, 20.9, 12.5, 17.5, 11.4, 20.4, 16.3, 13.1, 26.5]
 adap = [99.4, 89.6, 91.8, 93.7, 86.7, 88.1, 84.6, 90.5, 89.3, 91.3, 83.0, 85.0, 92.1, 90.0, 89.7, 92.9]
 
+print(sum(exac)/len(exac))
+print(sum(adap)/len(adap))
+
 plt.plot(range(1, len(exac) + 1), exac, label="Exact metric")
 plt.plot(range(1, len(adap) + 1), adap, label="Adapted metric")
 

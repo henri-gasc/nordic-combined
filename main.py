@@ -85,7 +85,7 @@ def run(values: tuple[int | None, int | None, bool, int]) -> tuple[tuple[float, 
         sim.update()
 
     # sim.show_energy_evol(-1)
-    # sim.correctness()
+    sim.correctness()
     # sim.compare_positions()
 
     sim.write()
@@ -106,10 +106,10 @@ while k < len(sys.argv):
 
     if arg == "-i":
         k += 1
-        i = int(sys.argv[k])
+        i = int(sys.argv[k]) -1
     elif arg == "-j":
         k += 1
-        j = int(sys.argv[k])
+        j = int(sys.argv[k]) -1
     elif (arg == "-m") or (arg == "--multi"):
         try:
             use_multi = int(sys.argv[k + 1])
@@ -122,6 +122,15 @@ while k < len(sys.argv):
         use_render = True
     elif arg[-7:] == "main.py":
         pass
+    elif (arg == "-h") or (arg == "--help"):
+        print("Help for main.py")
+        print("Launch the simulation of a nordic combined race\n")
+        print("  -i [int]          Select with file or folder (if race/season) to read in.")
+        print("                    Use the same number as shown when not using -i")
+        print("  -j [int]          Select the race in season or year in race")
+        print("                    Use the same number as shown when not using -j")
+        print("  -m/--multi [int]  Select the number same run to do")
+        print("  -r/--render       If set, write all images of the simulation")
     else:
         print(f"Unknow argument {arg}")
 
