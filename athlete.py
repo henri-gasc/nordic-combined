@@ -51,7 +51,8 @@ class Athlete:
         # return f"{self.name} ({self.rank})"
         return (
             # f"{self.name}: at {self.distance}m / {self.time}s with {self.avg_speed}m/s"
-            f"{self.name} ({self.expected_rank} -> {self.rank})"
+            # f"{self.name} ({self.expected_rank} -> {self.rank}), {utils.time_convert_to_str(self.time)}"
+            f"{self.name}, {utils.time_convert_to_str(self.time + self.start_time())}"
         )
 
     def get(self, name: str) -> str:

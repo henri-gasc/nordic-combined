@@ -8,7 +8,7 @@ def sum(file: str) -> tuple[dict[str, int], dict[str, int]]:
     points_sim: dict[str, int] = {}
     points_exp: dict[str, int] = {}
 
-    with open("data.csv") as f:
+    with open(file) as f:
         lines = f.read().split("\n")[:-1]
 
     for l in lines:
@@ -48,7 +48,10 @@ def read(file: str, file_sum: str) -> tuple[dict[str, int], dict[str, int]]:
     return complete, sim_ranks
 
 # ranks, ranks_sim = read("data_2.csv", "data.csv")
-ranks, ranks_sim = sum("data.csv")
+ranks, ranks_sim = sum("points.csv")
+
+# for a in ranks_sim:
+#     print(f"{ranks_sim[a]:02}: {a}")
 s = simulation.SlipstreamSim(0)
 
 for name in ranks_sim:

@@ -316,7 +316,10 @@ class Simulation(render.SimuRender):
 
 
     def write(self) -> None:
-        with open("data", "a") as f:
+        file = self.name
+        if file == "":
+            file = "data"
+        with open(file, "a") as f:
             for a in self.done:
                 f.write(f"{a.name}, {a.rank}, {a.expected_rank}, {a.time}\n")
 
@@ -336,7 +339,7 @@ class Simulation(render.SimuRender):
                 rp = 0
             else:
                 rp = values[rr]
-            with open("data.csv", "a") as f:
+            with open("points.csv", "a") as f:
                 f.write(f"{a.name}, {sp}, {rp}\n")
             # print(f"{a.name} ({a.rank}) -> {values[a.rank]}")
         return points
@@ -377,9 +380,10 @@ class SlipstreamSim(Simulation):
 
     prob_activation_boost = 0.90
 
-    def __init__(self, dt: float) -> None:
+    def __init__(self, dt: float, name: str = "") -> None:
         self.dt = dt
         self.use_random = True
+        self.name = name
 
     def guess_avg_speed(self, a: athlete.Athlete) -> float:
         """Return the average speed"""

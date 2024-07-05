@@ -24,6 +24,9 @@ class SimuRender:
     render = False
     colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
+    # File used
+    name = ""
+
     # Rendering records
     time: dict[str, list[float]] = {}
     dist: dict[str, list[float]] = {}

@@ -18,13 +18,22 @@ plt.ylabel("Correctness rate")
 plt.legend()
 plt.show()
 
-# with open("data") as f:
+# file = "01 Men Individual Gundersen LH_5.0km Ruka 25112022_5.0"
+# file = "07 Men Individual Gundersen NH_10.0km Ramsau am Dachstein 17122022_10.0"
+# file = "19 Men Individual Gundersen NH_10.0km Schonach 11022023_10.0"
+# file = "24 Men Individual Gundersen LH_10.0km Lahti 26032023_10.0"
+# file = "02 Men Individual Gundersen LH_10.0km Ruka 25112023_10.0"
+# file = "11 Men Individual Gundersen NH_10.0km Schonach 28012024_10.0"
+# file = "21 Men Individual Gundersen LH_10.0km Trondheim 17032024_10.0"
+
+# with open(f"{file}.csv") as f:
 #     lines = f.read().split("\n")[:-1]
 
 # for l in lines:
 #     s = l.split(", ")
 #     n = s[0]
-#     val = (int(s[1]) - 1) % 45
+#     # val = (int(s[1]) - 1) % 45
+#     val = int(s[1])
 #     # if n[:6] == "RIIBER":
 #     #     if int(s[1])%45 != 1:
 #     #         print(f"Problem: {l}")
@@ -32,12 +41,14 @@ plt.show()
 #         simulate[n].append(val)
 #     else:
 #         simulate[n] = [val]
-#         expected[n] = (int(s[2]) - 1) % 45
+#         # expected[n] = (int(s[2]) - 1) % 45
+#         expected[n] = int(s[2])
+
+# expected = {k: v for k, v in sorted(expected.items(), key=lambda item: item[1])}
 
 # for a in expected:
 #     r = simulate[a]
 #     avg = sum(r) / len(r)
-#     print(avg)
 #     plus = max(r) - avg
 #     minus = avg - min(r)
 #     plt.scatter(a, expected[a])
@@ -49,4 +60,4 @@ plt.show()
 # name = list(times.keys())[0]
 # plt.hist(times[name], bins=50, label=f"{name}")
 # plt.legend()
-plt.show()
+# plt.show()

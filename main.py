@@ -44,7 +44,7 @@ def start(i: int | None = None, j: int | None = None) -> simulation.Simulation:
     else:
         path = path_other
 
-    sim = simulation.SlipstreamSim(0.05)
+    sim = simulation.SlipstreamSim(0.05, name=os.path.basename(path))
     # sim = simulation.SimpleSim(0.05)
     sim.load_csv(path)
 
@@ -85,14 +85,14 @@ def run(values: tuple[int | None, int | None, bool, int]) -> tuple[tuple[float, 
         sim.update()
 
     # sim.show_energy_evol(-1)
-    sim.correctness()
+    # sim.correctness()
     # sim.compare_positions()
 
     sim.write()
-    # sim.give_points()
+    sim.give_points()
 
     sim.render_write()
-    return (sim.excat_rate(), sim.adapt_rate())
+    # return (sim.excat_rate(), sim.adapt_rate())
 
 
 i = None
@@ -137,32 +137,32 @@ while k < len(sys.argv):
     k += 1
 
 if use_multi == -1:
-    # for _ in range(1000):
-    run((i, j, use_render, None))
+    for _ in range(50):
+        run((i, j, use_render, None))
 else:
-    # correct_a = 0.0
-    # correct_e = 0.0
-    # total_a = 0.0
-    # total_e = 0.0
+    correct_a = 0.0
+    correct_e = 0.0
+    total_a = 0.0
+    total_e = 0.0
 
     points = {}
 
-    pool = multiprocessing.Pool()
-    out = pool.map(run, [(i, j, use_render, k) for k in range(use_multi)])
+    pool = multiprocessing.Pool(12)
+    out = pool.map(run, [(i, j, use_render, k % 12) for k in range(use_multi)])
     for race in out:
         e, a = race
-        
-        # correct_a += a[0]
-        # total_a += a[1]
-        # correct_e += e[0]
-        # total_e += e[1]
 
-    # print(
-    #     f"\nExact position: {correct_e} / {total_e} ({(correct_e / total_e * 100):6.3}%)"
-    # )
-    # print(
-    #     f"Adapted metric: {correct_a} / {total_a} = ({(correct_a / total_a * 100):6.3}%)"
-    # )
+        correct_a += a[0]
+        total_a += a[1]
+        correct_e += e[0]
+        total_e += e[1]
+
+    print(
+        f"\nExact position: {correct_e} / {total_e} ({(correct_e / total_e * 100):6.5}%)"
+    )
+    print(
+        f"Adapted metric: {correct_a} / {total_a} = ({(correct_a / total_a * 100):6.5}%)"
+    )
 
 # ffmpeg command:
 # ffmpeg -i imgs/%5d.png video.mp4
