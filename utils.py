@@ -13,6 +13,7 @@ def time_convert_to_str(time: int | float) -> str:
     # We want to keep the decisecond
     return f"{out}{int(time // 60):02}:{int(time - (time//60)*60):02}"
 
+
 def extract_date(filename: str) -> tuple[int, int, int]:
     parts = filename.split(" ")
     if parts[-1][0] == "S":
@@ -23,6 +24,7 @@ def extract_date(filename: str) -> tuple[int, int, int]:
     month = int(date[2:-4])
     day = int(date[:2])
     return (year, month, day)
+
 
 def select(l: list[str]) -> int:
     if len(l) == 1:

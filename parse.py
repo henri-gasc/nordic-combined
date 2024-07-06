@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import simulation
 import athlete
+import simulation
+
 
 def sum(file: str) -> tuple[dict[str, int], dict[str, int]]:
     points_sim: dict[str, int] = {}
@@ -22,19 +23,26 @@ def sum(file: str) -> tuple[dict[str, int], dict[str, int]]:
         else:
             points_exp[name] = int(rp)
 
-    points_real = {k: v for k, v in sorted(points_exp.items(), key=lambda item: item[1], reverse=True)}
+    points_real = {
+        k: v
+        for k, v in sorted(points_exp.items(), key=lambda item: item[1], reverse=True)
+    }
     athletes = list(points_real.keys())
     ranks = {}
     for i in range(len(athletes)):
         ranks[athletes[i]] = i + 1
 
-    points_sorted = {k: v for k, v in sorted(points_sim.items(), key=lambda item: item[1], reverse=True)}
+    points_sorted = {
+        k: v
+        for k, v in sorted(points_sim.items(), key=lambda item: item[1], reverse=True)
+    }
     i = 1
     sim_ranks = {}
     for a in points_sorted:
         sim_ranks[a] = i
         i += 1
     return ranks, sim_ranks
+
 
 def read(file: str, file_sum: str) -> tuple[dict[str, int], dict[str, int]]:
     trash, sim_ranks = sum(file_sum)
@@ -47,11 +55,13 @@ def read(file: str, file_sum: str) -> tuple[dict[str, int], dict[str, int]]:
 
     return complete, sim_ranks
 
+
 # ranks, ranks_sim = read("data_2.csv", "data.csv")
-ranks, ranks_sim = sum("points.csv")
+ranks, ranks_sim = sum("data_S24_25.csv")
+# ranks, ranks_sim, points = sum("points.csv")
 
 # for a in ranks_sim:
-#     print(f"{ranks_sim[a]:02}: {a}")
+#     print(f"{ranks_sim[a]:02}: {a} ({points[a]})")
 s = simulation.SlipstreamSim(0)
 
 for name in ranks_sim:

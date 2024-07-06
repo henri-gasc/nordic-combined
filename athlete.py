@@ -104,7 +104,7 @@ class Athlete:
         ds = self.avg_speed - s
         mult = 1.0
         if ds < 0.0:  # Lose energy more quickly than regenerate it
-            mult = 2.47 # Got this number after running a race with a single athlete
+            mult = 2.47  # Got this number after running a race with a single athlete
 
         # If ds > 0, regenerate energy, if < 0, lose some
         re = mult * dt * ds / 10

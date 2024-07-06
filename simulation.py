@@ -213,12 +213,8 @@ class Simulation(render.SimuRender):
         adapted_position, total, per_a = self.adapt_rate()
         n = self.num_athlete
 
-        print(
-            f"\nExact position: {exact_position} / {n} ({per_e:6.3}%)"
-        )
-        print(
-            f"Adapted metric: {adapted_position} / {total} = ({per_a:6.3}%)"
-        )
+        print(f"\nExact position: {exact_position} / {n} ({per_e:6.3}%)")
+        print(f"Adapted metric: {adapted_position} / {total} = ({per_a:6.3}%)")
 
     def show_energy_evol(self, num: int = 0) -> None:
         """Should only be used after the simulatio is done"""
@@ -261,7 +257,9 @@ class Simulation(render.SimuRender):
                 else:
                     min = i - sample_per_min // 2
                     max = i + sample_per_min // 2 + 1
-                avg.append(sum(speed[int(min):int(max)]) / len(speed[int(min):int(max)]))
+                avg.append(
+                    sum(speed[int(min) : int(max)]) / len(speed[int(min) : int(max)])
+                )
 
             # Code for aproximating energy multiplier
             # above = 0
@@ -314,7 +312,6 @@ class Simulation(render.SimuRender):
 
         print(text, end="\r")
 
-
     def write(self) -> None:
         file = self.name
         if file == "":
@@ -327,7 +324,48 @@ class Simulation(render.SimuRender):
         assert self.ended
         print("")
         points = {}
-        values = [100, 90, 80, 70, 60, 55, 52, 49, 46, 43, 40, 38, 36, 34, 32, 30, 28, 26, 24, 22, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+        values = [
+            100,
+            90,
+            80,
+            70,
+            60,
+            55,
+            52,
+            49,
+            46,
+            43,
+            40,
+            38,
+            36,
+            34,
+            32,
+            30,
+            28,
+            26,
+            24,
+            22,
+            20,
+            19,
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1,
+        ]
         for a in self.done:
             sr = a.rank - 1
             if sr >= len(values):
@@ -339,7 +377,7 @@ class Simulation(render.SimuRender):
                 rp = 0
             else:
                 rp = values[rr]
-            with open("points.csv", "a") as f:
+            with open("data_S24_25.csv", "a") as f:
                 f.write(f"{a.name}, {sp}, {rp}\n")
             # print(f"{a.name} ({a.rank}) -> {values[a.rank]}")
         return points

@@ -12,6 +12,7 @@ from matplotlib.animation import FuncAnimation
 import simulation
 import utils
 
+
 def start(i: int | None = None, j: int | None = None) -> simulation.Simulation:
     l = os.listdir("extracted")
     if len(l) == 0:
@@ -73,10 +74,13 @@ def start(i: int | None = None, j: int | None = None) -> simulation.Simulation:
     return sim
 
 
-def run(values: tuple[int | None, int | None, bool, int]) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
+def run(
+    values: tuple[int | None, int | None, bool, int]
+) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
     i, j, render, s = values
     if s is not None:
-        import time; time.sleep(s)
+        import time
+        time.sleep(s)
     sim = start(i, j)
     sim.render = render
 
@@ -89,10 +93,10 @@ def run(values: tuple[int | None, int | None, bool, int]) -> tuple[tuple[float, 
     # sim.compare_positions()
 
     sim.write()
-    sim.give_points()
+    # sim.give_points()
 
     sim.render_write()
-    # return (sim.excat_rate(), sim.adapt_rate())
+    return (sim.excat_rate(), sim.adapt_rate())
 
 
 i = None
@@ -106,10 +110,10 @@ while k < len(sys.argv):
 
     if arg == "-i":
         k += 1
-        i = int(sys.argv[k]) -1
+        i = int(sys.argv[k]) - 1
     elif arg == "-j":
         k += 1
-        j = int(sys.argv[k]) -1
+        j = int(sys.argv[k]) - 1
     elif (arg == "-m") or (arg == "--multi"):
         try:
             use_multi = int(sys.argv[k + 1])
@@ -125,7 +129,9 @@ while k < len(sys.argv):
     elif (arg == "-h") or (arg == "--help"):
         print("Help for main.py")
         print("Launch the simulation of a nordic combined race\n")
-        print("  -i [int]          Select with file or folder (if race/season) to read in.")
+        print(
+            "  -i [int]          Select with file or folder (if race/season) to read in."
+        )
         print("                    Use the same number as shown when not using -i")
         print("  -j [int]          Select the race in season or year in race")
         print("                    Use the same number as shown when not using -j")
