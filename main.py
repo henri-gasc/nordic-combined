@@ -80,6 +80,7 @@ def run(
     i, j, render, s = values
     if s is not None:
         import time
+
         time.sleep(s)
     sim = start(i, j)
     sim.render = render
@@ -93,7 +94,7 @@ def run(
     # sim.compare_positions()
 
     sim.write()
-    # sim.give_points()
+    sim.give_points()
 
     sim.render_write()
     return (sim.excat_rate(), sim.adapt_rate())

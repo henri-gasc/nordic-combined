@@ -57,7 +57,8 @@ def read(file: str, file_sum: str) -> tuple[dict[str, int], dict[str, int]]:
 
 
 # ranks, ranks_sim = read("data_2.csv", "data.csv")
-ranks, ranks_sim = sum("data_S24_25.csv")
+ranks, ranks_sim = read("stand.csv", "points.csv")
+# ranks, ranks_sim = sum("data_S24_25.csv")
 # ranks, ranks_sim, points = sum("points.csv")
 
 # for a in ranks_sim:

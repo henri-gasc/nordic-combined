@@ -10,6 +10,8 @@ import athlete
 import render
 import utils
 
+# Initialiez random seed
+
 
 class Simulation(render.SimuRender):
     """Base class for simulation"""
@@ -377,7 +379,7 @@ class Simulation(render.SimuRender):
                 rp = 0
             else:
                 rp = values[rr]
-            with open("data_S24_25.csv", "a") as f:
+            with open("points.csv", "a") as f:
                 f.write(f"{a.name}, {sp}, {rp}\n")
             # print(f"{a.name} ({a.rank}) -> {values[a.rank]}")
         return points

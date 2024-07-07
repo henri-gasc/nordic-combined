@@ -4,11 +4,35 @@ import matplotlib.pyplot as plt
 expected = {}
 simulate = {}
 
-exac = [71.529, 9.375, 14.5, 22.0, 10.0, 8.5217, 9.8222, 21.333, 23.282, 14.1, 13.0, 11.632, 18.082, 12.348, 12.298, 22.133]
-adap = [99.035, 89.801, 89.941, 93.778, 85.866, 87.84, 83.024, 90.444, 88.271, 90.721, 83.428, 84.395, 92.07, 89.82, 89.22, 92.099]
+exac = [
+    71.617,
+    3.4902,
+    7.9184,
+    9.8824,
+    8.383,
+    3.1489,
+    4.375,
+    18.519,
+    10.078,
+    12.245,
+    10.327,
+]
+adap = [
+    98.755,
+    76.082,
+    89.707,
+    87.26,
+    80.666,
+    81.835,
+    79.457,
+    88.653,
+    88.124,
+    89.196,
+    91.226,
+]
 
-print(sum(exac)/len(exac))
-print(sum(adap)/len(adap))
+print(sum(exac) / len(exac))
+print(sum(adap) / len(adap))
 
 plt.plot(range(1, len(exac) + 1), exac, label="Exact metric")
 plt.plot(range(1, len(adap) + 1), adap, label="Adapted metric")
